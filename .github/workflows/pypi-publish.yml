@@ -1,5 +1,9 @@
 name: Build, Test, and Publish Python Package
 
+# This workflow uses PyPI Trusted Publishers for secure package publishing.
+# For more information on how to set this up, please refer to the project's README.md
+# and the official PyPI documentation: https://docs.pypi.org/trusted-publishers/
+
 on:
   push:
     tags:
@@ -10,6 +14,8 @@ on:
 jobs:
   build-test-and-publish:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for Trusted Publishing
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,9 +42,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/
 
       - name: Publish release to PyPI
         if: >
@@ -47,6 +51,3 @@ jobs:
           startsWith(github.ref, 'refs/tags')
           
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}

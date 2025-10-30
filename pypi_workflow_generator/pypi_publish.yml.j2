@@ -42,6 +42,10 @@ jobs:
       - name: Build package
         run: python -m build
 
+      - name: Set IS_PULL_REQUEST for pre-release
+        if: github.event_name == 'pull_request'
+        run: echo "IS_PULL_REQUEST=true" >> $GITHUB_ENV
+
       - name: Publish pre-release to TestPyPI
         if: github.event_name == 'pull_request'
         uses: pypa/gh-action-pypi-publish@release/v1

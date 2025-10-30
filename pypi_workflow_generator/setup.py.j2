@@ -1,4 +1,3 @@
-
 from setuptools import setup, find_packages
 import os
 
@@ -12,7 +11,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name='pypi-workflow-generator',
+    name='your-package-name',
     use_scm_version={"local_scheme": local_scheme},
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -23,9 +22,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'pypi-workflow-generator=pypi_workflow_generator.main:main',
-            'pypi-workflow-generator-init=pypi_workflow_generator.init:main',
-            'pypi-release=pypi_workflow_generator.create_release:main',
+            'your-command=your_package.main:main',
         ],
     },
 )

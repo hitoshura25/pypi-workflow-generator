@@ -27,6 +27,10 @@ def generate_workflow(python_version, output_filename, release_on_main_push, bas
     print(f"Successfully generated {full_output_path}")
 
 def main():
+    if not os.path.exists('pyproject.toml') or not os.path.exists('setup.py'):
+        print("Project not initialized. Please run 'pypi-workflow-generator-init' first.")
+        return
+
     parser = argparse.ArgumentParser(description='Generate a GitHub Actions workflow for Python packages.')
 
     # CLI mode arguments

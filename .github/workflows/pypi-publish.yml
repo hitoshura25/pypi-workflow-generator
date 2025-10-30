@@ -42,6 +42,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          verbose: true
           repository-url: https://test.pypi.org/legacy/
 
       - name: Publish release to PyPI

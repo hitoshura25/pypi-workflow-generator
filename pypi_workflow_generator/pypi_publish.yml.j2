@@ -40,7 +40,7 @@ jobs:
         run: python -m pytest pypi_workflow_generator/
 
       - name: Build package
-        run: python setup.py sdist bdist_wheel
+        run: python -m build
 
       - name: Publish pre-release to TestPyPI
         if: github.event_name == 'pull_request'

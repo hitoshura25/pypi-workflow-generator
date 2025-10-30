@@ -1,0 +1,5 @@
+pytest
+jinja2
+twine
+wheel
+setuptools_scm

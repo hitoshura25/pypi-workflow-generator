@@ -6,7 +6,6 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='pypi-workflow-generator',
-    use_scm_version={'local_scheme': 'no-local-version', 'fallback_version': '0.0.1'},
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_packages(),

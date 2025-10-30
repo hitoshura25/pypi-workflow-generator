@@ -42,12 +42,6 @@ jobs:
       - name: Build package
         run: python -m build
 
-      - name: Set pre--release version for TestPyPI
-        if: github.event_name == 'pull_request'
-        run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null) || LATEST_TAG="0.0.0"
-          echo "SETUPTOOLS_SCM_PRETEND_VERSION=${LATEST_TAG}.dev{{ '{{' }} github.run_id {{ '}}' }}" >> $GITHUB_ENV
-
       - name: Publish pre-release to TestPyPI
         if: github.event_name == 'pull_request'
         uses: pypa/gh-action-pypi-publish@release/v1

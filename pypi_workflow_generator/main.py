@@ -4,7 +4,7 @@ import json
 import os
 from jinja2 import Environment, FileSystemLoader
 
-def generate_workflow(python_version, output_filename, release_on_main_push):
+def generate_workflow(python_version, output_filename, release_on_main_push, base_output_dir=None):
     # Get the directory of the current script
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -16,7 +16,7 @@ def generate_workflow(python_version, output_filename, release_on_main_push):
     workflow_content = template.render(python_version=python_version, release_on_main_push=release_on_main_push)
 
     # Construct the full output path
-    output_dir = os.path.join(os.getcwd(), '.github', 'workflows')
+    output_dir = base_output_dir if base_output_dir else os.path.join(os.getcwd(), '.github', 'workflows')
     os.makedirs(output_dir, exist_ok=True) # Create directories if they don't exist
     full_output_path = os.path.join(output_dir, output_filename)
 

@@ -39,7 +39,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests with pytest
-        run: python -m pytest pypi_workflow_generator/
+        run: python -m pytest {{ test_path }}
 
       - name: Build package
         run: python -m build

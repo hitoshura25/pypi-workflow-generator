@@ -26,6 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Required for setuptools_scm
+          fetch-tags: true
 
       - name: Set up Python {{ python_version }}
         uses: actions/setup-python@v4
@@ -38,7 +39,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests with pytest
-        run: python -m pytest {{ test_path }}
+        run: python -m pytest pypi_workflow_generator/
 
       - name: Build package
         run: python -m build

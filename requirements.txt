@@ -1,0 +1,7 @@
+pytest
+Jinja2
+pyyaml
+twine
+wheel
+setuptools_scm
+build

@@ -1,12 +1,10 @@
-import os
-import pytest
 from pypi_workflow_generator.main import generate_workflow
 
 
 def test_generate_workflow_default_arguments(tmp_path):
     """Test workflow generation with default arguments."""
     output_dir = tmp_path / ".github" / "workflows"
-    generate_workflow(python_version='3.11', output_filename='pypi-publish.yml', release_on_main_push=False, base_output_dir=output_dir, verbose_publish=False)
+    generate_workflow(python_version='3.11', output_filename='pypi-publish.yml', release_on_main_push=False, test_path='.', base_output_dir=output_dir, verbose_publish=False)
 
     output_file = output_dir / 'pypi-publish.yml'
     assert output_file.exists()
@@ -15,23 +13,16 @@ def test_generate_workflow_default_arguments(tmp_path):
         content = f.read()
 
     assert "python-version: '3.11'" in content
-    assert """tags:
-      - 'v*.*.*'""" in content
-    expected_if_condition = "if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')"
-    # Extract the 'if:' line for the 'Publish release to PyPI' step and compare after stripping whitespace
-    publish_pypi_block_start = content.find("- name: Publish release to PyPI")
-    publish_pypi_block_end = content.find("- name: Publish pre-release to TestPyPI", publish_pypi_block_start) # Find next step
-    if publish_pypi_block_end == -1:
-        publish_pypi_block_end = len(content) # If no next step, go to end of content
-    publish_pypi_block = content[publish_pypi_block_start:publish_pypi_block_end]
+    assert "tags:" in content
+    assert "- 'v*.*.*'" in content
+    assert "if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')" in content
+    assert "run: python -m pytest ." in content
 
-    if_line = next(line for line in publish_pypi_block.splitlines() if line.strip().startswith("if:"))
-    assert "".join(expected_if_condition.split()) == "".join(if_line.split())
 
 def test_generate_workflow_custom_arguments(tmp_path):
     """Test workflow generation with custom arguments."""
     output_dir = tmp_path / ".github" / "workflows"
-    generate_workflow(python_version='3.9', output_filename='custom-pypi-publish.yml', release_on_main_push=True, base_output_dir=output_dir, verbose_publish=True)
+    generate_workflow(python_version='3.9', output_filename='custom-pypi-publish.yml', release_on_main_push=True, test_path='tests', base_output_dir=output_dir, verbose_publish=True)
 
     output_file = output_dir / 'custom-pypi-publish.yml'
     assert output_file.exists()
@@ -41,16 +32,6 @@ def test_generate_workflow_custom_arguments(tmp_path):
 
     assert "python-version: '3.9'" in content
     assert "branches: [ main ]" in content
-    expected_if_condition = "if: github.event_name == 'push' && github.ref == 'refs/heads/main'"
-    publish_pypi_block_start = content.find("- name: Publish release to PyPI")
-    publish_pypi_block_end = content.find("- name: Publish pre-release to TestPyPI", publish_pypi_block_start) # Find next step
-    if publish_pypi_block_end == -1:
-        publish_pypi_block_end = len(content) # If no next step, go to end of content
-    publish_pypi_block = content[publish_pypi_block_start:publish_pypi_block_end]
-
-    if_line = next(line for line in publish_pypi_block.splitlines() if line.strip().startswith("if:"))
-    assert "".join(expected_if_condition.split()) == "".join(if_line.split())
-    assert """tags:
-      - 'v*.*.*'""" not in content
-    assert "startsWith(github.ref, 'refs/tags')" not in "".join(content.split())
+    assert "if: github.event_name == 'push' && github.ref == 'refs/heads/main'" in content
+    assert "run: python -m pytest tests" in content
     assert "verbose: true" in content

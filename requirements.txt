@@ -1,5 +1,6 @@
 pytest
-jinja2
+Jinja2
+pyyaml
 twine
 wheel
 setuptools_scm

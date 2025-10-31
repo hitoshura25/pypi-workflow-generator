@@ -4,7 +4,7 @@ import json
 import os
 from jinja2 import Environment, FileSystemLoader
 
-def generate_workflow(python_version, output_filename, release_on_main_push, base_output_dir=None, verbose_publish=False):
+def generate_workflow(python_version, output_filename, release_on_main_push, test_path, base_output_dir=None, verbose_publish=False):
     # Get the directory of the current script
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -13,7 +13,7 @@ def generate_workflow(python_version, output_filename, release_on_main_push, bas
     template = env.get_template('pypi_publish.yml.j2')
 
     # Render the template with the provided Python version
-    workflow_content = template.render(python_version=python_version, release_on_main_push=release_on_main_push, verbose_publish=verbose_publish)
+    workflow_content = template.render(python_version=python_version, release_on_main_push=release_on_main_push, verbose_publish=verbose_publish, test_path=test_path)
 
     # Construct the full output path
     output_dir = base_output_dir if base_output_dir else os.path.join(os.getcwd(), '.github', 'workflows')
@@ -37,6 +37,7 @@ def main():
     parser.add_argument('--python-version', default='3.11', help='The version of Python to use in the workflow.')
     parser.add_argument('--output-filename', default='pypi-publish.yml', help='The name for the generated workflow file.')
     parser.add_argument('--release-on-main-push', action='store_true', help='Initiate the release on every main branch push.')
+    parser.add_argument('--test-path', default='.', help='The path to the tests.')
     parser.add_argument('--verbose-publish', action='store_true', help='If set, publishing actions will run in verbose mode.')
 
     # MCP mode argument
@@ -51,18 +52,20 @@ def main():
             python_version = mcp_params.get('python_version', '3.11')
             output_filename = mcp_params.get('output_filename', 'pypi-publish.yml')
             release_on_main_push = mcp_params.get('release_on_main_push', False)
+            test_path = mcp_params.get('test_path', '.')
             verbose_publish = mcp_params.get('verbose_publish', False)
-        except json.JSONDecodeError:
-            print("Error: Invalid JSON string provided for --mcp-input.")
+        except json.JSONDecodeError as e:
+            print(f"Error: Invalid JSON string provided for --mcp-input: {e}")
             return
     else:
         # CLI mode
         python_version = args.python_version
         output_filename = args.output_filename
         release_on_main_push = args.release_on_main_push
+        test_path = args.test_path
         verbose_publish = args.verbose_publish
 
-    generate_workflow(python_version, output_filename, release_on_main_push, verbose_publish=verbose_publish)
+    generate_workflow(python_version, output_filename, release_on_main_push, test_path, verbose_publish=verbose_publish)
 
 if __name__ == "__main__":
     main()

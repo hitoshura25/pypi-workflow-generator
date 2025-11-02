@@ -85,7 +85,7 @@ def main():
             release_on_main_push=release_on_main_push,
             test_path=test_path,
             verbose_publish=verbose_publish,
-            include_release_workflow=not args.skip_release_workflow if not args.mcp_input else True
+            include_release_workflow=not args.skip_release_workflow
         )
         print(result['message'])
         return 0

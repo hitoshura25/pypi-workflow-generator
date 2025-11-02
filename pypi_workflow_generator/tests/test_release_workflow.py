@@ -2,15 +2,15 @@
 Tests for release workflow generation.
 """
 import os
-import pytest
+from pathlib import Path
 from pypi_workflow_generator.generator import generate_release_workflow, generate_workflow
 
 
-def test_generate_release_workflow_default(tmp_path):
+def test_generate_release_workflow_default(tmp_path: Path):
     """Test release workflow generation with default arguments."""
     output_dir = tmp_path / ".github" / "workflows"
     result = generate_release_workflow(
-        base_output_dir=output_dir
+        base_output_dir=str(output_dir)
     )
 
     assert result['success']
@@ -34,17 +34,17 @@ def test_generate_release_workflow_default(tmp_path):
     assert "generate-notes" in content
 
 
-def test_generate_release_workflow_custom_filename(tmp_path):
+def test_generate_release_workflow_custom_filename(tmp_path: Path):
     """Test release workflow with custom filename."""
     output_dir = tmp_path / ".github" / "workflows"
     result = generate_release_workflow(
         output_filename='my-release.yml',
-        base_output_dir=output_dir
+        base_output_dir=str(output_dir)
     )
 
     assert result['success']
 
-    output_file = tmp_path / ".github" / "workflows" / 'my-release.yml'
+    output_file = output_dir / 'my-release.yml'
     assert output_file.exists()
 
     with open(output_file, 'r') as f:
@@ -53,13 +53,13 @@ def test_generate_release_workflow_custom_filename(tmp_path):
     assert "workflow_dispatch" in content
 
 
-def test_generate_release_workflow_creates_directory(tmp_path):
+def test_generate_release_workflow_creates_directory(tmp_path: Path):
     """Test that workflow generation creates output directory if needed."""
     output_dir = tmp_path / ".github" / "workflows"
     assert not output_dir.exists()
 
     result = generate_release_workflow(
-        base_output_dir=output_dir
+        base_output_dir=str(output_dir)
     )
 
     assert result['success']
@@ -67,7 +67,7 @@ def test_generate_release_workflow_creates_directory(tmp_path):
     assert (output_dir / 'create-release.yml').exists()
 
 
-def test_generate_workflow_includes_release_by_default(tmp_path):
+def test_generate_workflow_includes_release_by_default(tmp_path: Path):
     """Test that generate_workflow creates both workflows by default."""
     # Create dummy pyproject.toml and setup.py for validation
     (tmp_path / 'pyproject.toml').write_text('[build-system]')
@@ -80,7 +80,7 @@ def test_generate_workflow_includes_release_by_default(tmp_path):
         output_dir = tmp_path / ".github" / "workflows"
         result = generate_workflow(
             python_version='3.11',
-            base_output_dir=output_dir
+            base_output_dir=str(output_dir)
         )
 
         assert result['success']
@@ -95,7 +95,7 @@ def test_generate_workflow_includes_release_by_default(tmp_path):
         os.chdir(original_cwd)
 
 
-def test_generate_workflow_skip_release(tmp_path):
+def test_generate_workflow_skip_release(tmp_path: Path):
     """Test that generate_workflow can skip release workflow."""
     # Create dummy pyproject.toml and setup.py for validation
     (tmp_path / 'pyproject.toml').write_text('[build-system]')
@@ -108,7 +108,7 @@ def test_generate_workflow_skip_release(tmp_path):
         output_dir = tmp_path / ".github" / "workflows"
         result = generate_workflow(
             python_version='3.11',
-            base_output_dir=output_dir,
+            base_output_dir=str(output_dir),
             include_release_workflow=False
         )
 

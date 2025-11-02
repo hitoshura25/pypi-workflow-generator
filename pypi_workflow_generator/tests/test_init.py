@@ -10,7 +10,7 @@ def test_init_project(tmp_path):
     result = initialize_project(package_name='my-package', author='My Name', author_email='my.email@example.com', description='My new package.', url='https://github.com/my-username/my-package', command_name='my-command')
 
     # Assert the function returned success
-    assert result['success'] == True
+    assert result['success']
     assert 'files_created' in result
     assert 'message' in result
 

@@ -5,7 +5,7 @@ def test_generate_workflow_default_arguments(tmp_path):
     output_dir = tmp_path / ".github" / "workflows"
     result = generate_workflow(python_version='3.11', output_filename='pypi-publish.yml', release_on_main_push=False, test_path='.', base_output_dir=output_dir, verbose_publish=False)
 
-    assert result['success'] == True
+    assert result['success']
     assert 'file_path' in result
     assert 'message' in result
 
@@ -27,7 +27,7 @@ def test_generate_workflow_custom_arguments(tmp_path):
     output_dir = tmp_path / ".github" / "workflows"
     result = generate_workflow(python_version='3.9', output_filename='custom-pypi-publish.yml', release_on_main_push=True, test_path='tests', base_output_dir=output_dir, verbose_publish=True)
 
-    assert result['success'] == True
+    assert result['success']
     assert 'file_path' in result
     assert 'message' in result
 

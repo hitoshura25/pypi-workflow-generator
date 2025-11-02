@@ -1,52 +1,61 @@
+#!/usr/bin/env python3
+"""
+CLI for PyPI Workflow Generator.
+
+This module provides the command-line interface for generating
+GitHub Actions workflows.
+"""
 
 import argparse
 import json
-import os
-from jinja2 import Environment, FileSystemLoader
+import sys
+from .generator import generate_workflow
 
-def generate_workflow(python_version, output_filename, release_on_main_push, test_path, base_output_dir=None, verbose_publish=False):
-    # Get the directory of the current script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # Set up Jinja2 environment
-    env = Environment(loader=FileSystemLoader(script_dir))
-    template = env.get_template('pypi_publish.yml.j2')
-
-    # Render the template with the provided Python version
-    workflow_content = template.render(python_version=python_version, release_on_main_push=release_on_main_push, verbose_publish=verbose_publish, test_path=test_path)
-
-    # Construct the full output path
-    output_dir = base_output_dir if base_output_dir else os.path.join(os.getcwd(), '.github', 'workflows')
-    os.makedirs(output_dir, exist_ok=True) # Create directories if they don't exist
-    full_output_path = os.path.join(output_dir, output_filename)
-
-    # Write the rendered content to the output file
-    with open(full_output_path, 'w') as f:
-        f.write(workflow_content)
-
-    print(f"Successfully generated {full_output_path}")
 
 def main():
-    if not os.path.exists('pyproject.toml') or not os.path.exists('setup.py'):
-        print("Project not initialized. Please run 'pypi-workflow-generator-init' first.")
-        return
-
-    parser = argparse.ArgumentParser(description='Generate a GitHub Actions workflow for Python packages.')
+    """Main CLI entry point."""
+    parser = argparse.ArgumentParser(
+        description='Generate a GitHub Actions workflow for Python package publishing.'
+    )
 
     # CLI mode arguments
-    parser.add_argument('--python-version', default='3.11', help='The version of Python to use in the workflow.')
-    parser.add_argument('--output-filename', default='pypi-publish.yml', help='The name for the generated workflow file.')
-    parser.add_argument('--release-on-main-push', action='store_true', help='Initiate the release on every main branch push.')
-    parser.add_argument('--test-path', default='.', help='The path to the tests.')
-    parser.add_argument('--verbose-publish', action='store_true', help='If set, publishing actions will run in verbose mode.')
+    parser.add_argument(
+        '--python-version',
+        default='3.11',
+        help='The version of Python to use in the workflow (default: 3.11)'
+    )
+    parser.add_argument(
+        '--output-filename',
+        default='pypi-publish.yml',
+        help='The name for the generated workflow file (default: pypi-publish.yml)'
+    )
+    parser.add_argument(
+        '--release-on-main-push',
+        action='store_true',
+        help='Initiate the release on every main branch push'
+    )
+    parser.add_argument(
+        '--test-path',
+        default='.',
+        help='The path to the tests (default: .)'
+    )
+    parser.add_argument(
+        '--verbose-publish',
+        action='store_true',
+        help='Enable verbose mode for publishing actions'
+    )
 
-    # MCP mode argument
-    parser.add_argument('--mcp-input', help='A JSON string containing the input parameters for MCP mode.')
+    # Legacy MCP mode argument (kept for backward compatibility)
+    parser.add_argument(
+        '--mcp-input',
+        help='[DEPRECATED] Use MCP server mode instead. JSON string containing input parameters.'
+    )
 
     args = parser.parse_args()
 
     if args.mcp_input:
-        # MCP mode
+        # Legacy MCP mode (deprecated but supported for backward compatibility)
+        print("Warning: --mcp-input is deprecated. Use 'mcp-pypi-workflow-generator' for MCP server mode.", file=sys.stderr)
         try:
             mcp_params = json.loads(args.mcp_input)
             python_version = mcp_params.get('python_version', '3.11')
@@ -55,8 +64,8 @@ def main():
             test_path = mcp_params.get('test_path', '.')
             verbose_publish = mcp_params.get('verbose_publish', False)
         except json.JSONDecodeError as e:
-            print(f"Error: Invalid JSON string provided for --mcp-input: {e}")
-            return
+            print(f"Error: Invalid JSON string provided for --mcp-input: {e}", file=sys.stderr)
+            return 1
     else:
         # CLI mode
         python_version = args.python_version
@@ -65,7 +74,22 @@ def main():
         test_path = args.test_path
         verbose_publish = args.verbose_publish
 
-    generate_workflow(python_version, output_filename, release_on_main_push, test_path, verbose_publish=verbose_publish)
+    try:
+        result = generate_workflow(
+            python_version=python_version,
+            output_filename=output_filename,
+            release_on_main_push=release_on_main_push,
+            test_path=test_path,
+            verbose_publish=verbose_publish
+        )
+        print(result['message'])
+        return 0
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
 
 if __name__ == "__main__":
     main()

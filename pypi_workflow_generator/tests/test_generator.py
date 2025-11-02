@@ -1,10 +1,14 @@
-from pypi_workflow_generator.main import generate_workflow
+from pypi_workflow_generator.generator import generate_workflow
 
 
 def test_generate_workflow_default_arguments(tmp_path):
     """Test workflow generation with default arguments."""
     output_dir = tmp_path / ".github" / "workflows"
-    generate_workflow(python_version='3.11', output_filename='pypi-publish.yml', release_on_main_push=False, test_path='.', base_output_dir=output_dir, verbose_publish=False)
+    result = generate_workflow(python_version='3.11', output_filename='pypi-publish.yml', release_on_main_push=False, test_path='.', base_output_dir=output_dir, verbose_publish=False)
+
+    assert result['success'] == True
+    assert 'file_path' in result
+    assert 'message' in result
 
     output_file = output_dir / 'pypi-publish.yml'
     assert output_file.exists()
@@ -22,7 +26,11 @@ def test_generate_workflow_default_arguments(tmp_path):
 def test_generate_workflow_custom_arguments(tmp_path):
     """Test workflow generation with custom arguments."""
     output_dir = tmp_path / ".github" / "workflows"
-    generate_workflow(python_version='3.9', output_filename='custom-pypi-publish.yml', release_on_main_push=True, test_path='tests', base_output_dir=output_dir, verbose_publish=True)
+    result = generate_workflow(python_version='3.9', output_filename='custom-pypi-publish.yml', release_on_main_push=True, test_path='tests', base_output_dir=output_dir, verbose_publish=True)
+
+    assert result['success'] == True
+    assert 'file_path' in result
+    assert 'message' in result
 
     output_file = output_dir / 'custom-pypi-publish.yml'
     assert output_file.exists()

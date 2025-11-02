@@ -11,7 +11,6 @@ import json
 import sys
 from .generator import generate_workflow
 
-
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -92,4 +91,4 @@ def main():
         return 1
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

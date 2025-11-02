@@ -193,6 +193,8 @@ Options:
   --overwrite          Overwrite an existing tag
 ```
 
+**Note**: The CLI uses semantic versioning (major/minor/patch) for convenience. The MCP tool `create_release` accepts explicit version strings (e.g., "v1.0.0") for flexibility. See [Interface Differences](#interface-differences) below.
+
 ## MCP Server Details
 
 The MCP server runs via stdio transport and provides three tools:
@@ -210,6 +212,48 @@ The MCP server runs via stdio transport and provides three tools:
 - Parameters: version
 
 See [MCP-USAGE.md](./MCP-USAGE.md) for detailed MCP configuration and usage.
+
+## Interface Differences
+
+The package provides two interfaces with slightly different APIs for different use cases:
+
+### CLI vs MCP: Release Creation
+
+**CLI Mode** (`pypi-release`):
+- Uses semantic versioning keywords: `major`, `minor`, `patch`
+- Automatically increments version from latest git tag
+- Convenience for developers who want simple versioning
+
+```bash
+pypi-release patch      # Creates v1.0.1 (if current is v1.0.0)
+pypi-release minor      # Creates v1.1.0
+pypi-release major      # Creates v2.0.0
+```
+
+**MCP Mode** (`create_release` tool):
+- Accepts explicit version strings: `v1.0.0`, `v2.5.3`, etc.
+- Direct control over version numbers
+- Flexibility for AI agents to determine versions programmatically
+
+```json
+{
+  "version": "v1.0.0"
+}
+```
+
+**Why the difference?** The CLI optimizes for human convenience (automatic incrementing), while MCP optimizes for programmatic control (explicit versions).
+
+### Entry Point Naming Convention
+
+The MCP server uses the `mcp-` prefix (industry standard for MCP tools):
+- `mcp-pypi-workflow-generator` - Follows MCP ecosystem naming
+- Makes it discoverable when searching for MCP servers
+- Clearly distinguishes server mode from CLI mode
+
+All other commands use the `pypi-` prefix for CLI operations:
+- `pypi-workflow-generator`
+- `pypi-workflow-generator-init`
+- `pypi-release`
 
 ## Architecture
 

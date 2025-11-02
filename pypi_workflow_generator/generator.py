@@ -8,10 +8,8 @@ This module contains the shared business logic used by both:
 
 import os
 import subprocess
-import sys
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from jinja2 import Environment, FileSystemLoader
-
 
 def generate_workflow(
     python_version: str = '3.11',

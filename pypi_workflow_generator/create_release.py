@@ -8,7 +8,6 @@ import subprocess
 import sys
 from .generator import create_git_release
 
-
 def create_release_tag_with_overwrite(version, overwrite=False):
     """
     Create a git release tag with optional overwrite.
@@ -80,4 +79,4 @@ def main():
     return create_release_tag_with_overwrite(new_version, args.overwrite)
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

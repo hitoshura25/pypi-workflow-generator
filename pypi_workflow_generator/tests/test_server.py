@@ -2,13 +2,9 @@
 Tests for MCP server functionality.
 """
 
-import json
 import os
-import asyncio
 import pytest
-from pathlib import Path
 from pypi_workflow_generator.server import MCPServer
-
 
 @pytest.mark.asyncio
 async def test_list_tools():

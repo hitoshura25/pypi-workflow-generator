@@ -1,7 +1,6 @@
 import os
 from pypi_workflow_generator.generator import initialize_project
 
-
 def test_init_project(tmp_path):
     """Test project initialization."""
     # Change the current working directory to the temporary directory

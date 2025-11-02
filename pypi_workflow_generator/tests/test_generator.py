@@ -1,6 +1,5 @@
 from pypi_workflow_generator.generator import generate_workflow
 
-
 def test_generate_workflow_default_arguments(tmp_path):
     """Test workflow generation with default arguments."""
     output_dir = tmp_path / ".github" / "workflows"

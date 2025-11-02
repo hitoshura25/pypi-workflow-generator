@@ -7,7 +7,6 @@ import argparse
 import sys
 from .generator import initialize_project
 
-
 def main():
     """Main entry point for project initialization."""
     parser = argparse.ArgumentParser(
@@ -38,4 +37,4 @@ def main():
         return 1
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

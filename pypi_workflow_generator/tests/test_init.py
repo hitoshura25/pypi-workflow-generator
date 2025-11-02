@@ -1,14 +1,18 @@
 import os
-from pypi_workflow_generator.init import init_project
-
+from pypi_workflow_generator.generator import initialize_project
 
 def test_init_project(tmp_path):
     """Test project initialization."""
     # Change the current working directory to the temporary directory
     os.chdir(tmp_path)
 
-    # Run the init_project function
-    init_project(package_name='my-package', author='My Name', author_email='my.email@example.com', description='My new package.', url='https://github.com/my-username/my-package', command_name='my-command')
+    # Run the initialize_project function
+    result = initialize_project(package_name='my-package', author='My Name', author_email='my.email@example.com', description='My new package.', url='https://github.com/my-username/my-package', command_name='my-command')
+
+    # Assert the function returned success
+    assert result['success']
+    assert 'files_created' in result
+    assert 'message' in result
 
     # Assert that the files have been created
     assert os.path.exists('pyproject.toml')

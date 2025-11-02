@@ -16,10 +16,10 @@ except FileNotFoundError:
 
 setup(
     name='pypi-workflow-generator',
-    author='Your Name',
-    author_email='your.email@example.com',
-    description='A tool to generate GitHub Actions workflows for Python packages.',
-    url='https://github.com/your-username/pypi-workflow-generator',
+    author='Vinayak Menon',
+    author_email='vinayakmenon+pypi@users.noreply.github.com',
+    description='Dual-mode tool (MCP server + CLI) for generating GitHub Actions workflows for Python package publishing',
+    url='https://github.com/hitoshura25/pypi-workflow-generator',
     use_scm_version={"local_scheme": local_scheme},
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -28,17 +28,30 @@ setup(
     install_requires=[
         'Jinja2>=3.0',
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.8',
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Code Generators",
+        "Topic :: Software Development :: Build Tools",
     ],
     entry_points={
         'console_scripts': [
+            # CLI mode (existing)
             'pypi-workflow-generator=pypi_workflow_generator.main:main',
             'pypi-workflow-generator-init=pypi_workflow_generator.init:main',
             'pypi-release=pypi_workflow_generator.create_release:main',
+
+            # MCP mode (new)
+            'mcp-pypi-workflow-generator=pypi_workflow_generator.server:main',
         ],
     },
 )

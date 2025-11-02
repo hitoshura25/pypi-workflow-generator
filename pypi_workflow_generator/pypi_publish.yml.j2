@@ -26,6 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Required for setuptools_scm
+          fetch-tags: true
 
       - name: Set up Python {{ python_version }}
         uses: actions/setup-python@v4

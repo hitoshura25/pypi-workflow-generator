@@ -11,7 +11,7 @@ import json
 import asyncio
 from typing import Any, Dict
 
-from .generator import generate_workflow, initialize_project, create_git_release
+from .generator import generate_workflow, initialize_project, create_git_release, generate_release_workflow
 
 
 class MCPServer:
@@ -59,6 +59,11 @@ class MCPServer:
                                 "type": "boolean",
                                 "description": "Enable verbose mode for publishing",
                                 "default": False
+                            },
+                            "include_release_workflow": {
+                                "type": "boolean",
+                                "description": "Also generate create-release.yml workflow for manual releases",
+                                "default": True
                             }
                         },
                         "required": []
@@ -111,6 +116,21 @@ class MCPServer:
                         },
                         "required": ["version"]
                     }
+                },
+                {
+                    "name": "generate_release_workflow",
+                    "description": "Generate GitHub Actions workflow for creating releases via UI. Allows manual release creation with automatic version calculation and tag creation.",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "output_filename": {
+                                "type": "string",
+                                "description": "Name of the workflow file",
+                                "default": "create-release.yml"
+                            }
+                        },
+                        "required": []
+                    }
                 }
             ]
         }
@@ -144,6 +164,18 @@ class MCPServer:
 
             elif tool_name == "create_release":
                 result = create_git_release(arguments['version'])
+                return {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": result['message']
+                        }
+                    ],
+                    "isError": not result['success']
+                }
+
+            elif tool_name == "generate_release_workflow":
+                result = generate_release_workflow(**arguments)
                 return {
                     "content": [
                         {

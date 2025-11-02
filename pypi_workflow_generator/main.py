@@ -43,6 +43,11 @@ def main():
         action='store_true',
         help='Enable verbose mode for publishing actions'
     )
+    parser.add_argument(
+        '--skip-release-workflow',
+        action='store_true',
+        help='Do not generate the create-release.yml workflow (only generate pypi-publish.yml)'
+    )
 
     # Legacy MCP mode argument (kept for backward compatibility)
     parser.add_argument(
@@ -79,7 +84,8 @@ def main():
             output_filename=output_filename,
             release_on_main_push=release_on_main_push,
             test_path=test_path,
-            verbose_publish=verbose_publish
+            verbose_publish=verbose_publish,
+            include_release_workflow=not args.skip_release_workflow if not args.mcp_input else True
         )
         print(result['message'])
         return 0

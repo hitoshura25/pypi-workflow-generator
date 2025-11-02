@@ -13,12 +13,13 @@ async def test_list_tools():
     result = await server.handle_list_tools()
 
     assert "tools" in result
-    assert len(result["tools"]) == 3
+    assert len(result["tools"]) == 4
 
     tool_names = [tool["name"] for tool in result["tools"]]
     assert "generate_workflow" in tool_names
     assert "initialize_project" in tool_names
     assert "create_release" in tool_names
+    assert "generate_release_workflow" in tool_names
 
     # Verify each tool has required fields
     for tool in result["tools"]:
@@ -237,7 +238,7 @@ async def test_handle_request_list_tools():
     response = await server.handle_request(request)
 
     assert "tools" in response
-    assert len(response["tools"]) == 3
+    assert len(response["tools"]) == 4
 
 
 @pytest.mark.asyncio
@@ -288,3 +289,83 @@ def test_mcp_server_imports():
     assert MCPServer is not None
     assert main is not None
     assert callable(main)
+
+
+@pytest.mark.asyncio
+async def test_call_tool_generate_release_workflow(tmp_path):
+    """Test calling generate_release_workflow tool via MCP."""
+    server = MCPServer()
+
+    original_cwd = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        result = await server.handle_call_tool(
+            "generate_release_workflow",
+            {}
+        )
+
+        assert "content" in result
+        assert result.get("isError") == False
+        assert "Successfully generated" in result["content"][0]["text"]
+
+        workflow_path = tmp_path / ".github" / "workflows" / "create-release.yml"
+        assert workflow_path.exists()
+
+        content = workflow_path.read_text()
+        assert "workflow_dispatch" in content
+        assert "Create GitHub Release" in content
+
+    finally:
+        os.chdir(original_cwd)
+
+
+@pytest.mark.asyncio
+async def test_call_tool_generate_release_workflow_custom_filename(tmp_path):
+    """Test release workflow with custom filename via MCP."""
+    server = MCPServer()
+
+    original_cwd = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        result = await server.handle_call_tool(
+            "generate_release_workflow",
+            {"output_filename": "custom-release.yml"}
+        )
+
+        assert result.get("isError") == False
+
+        workflow_path = tmp_path / ".github" / "workflows" / "custom-release.yml"
+        assert workflow_path.exists()
+
+    finally:
+        os.chdir(original_cwd)
+
+
+@pytest.mark.asyncio
+async def test_generate_workflow_includes_release_via_mcp(tmp_path):
+    """Test that generate_workflow MCP tool creates both workflows by default."""
+    server = MCPServer()
+
+    original_cwd = os.getcwd()
+    os.chdir(tmp_path)
+
+    try:
+        # Create dummy project files
+        (tmp_path / "pyproject.toml").write_text("[build-system]\n")
+        (tmp_path / "setup.py").write_text("from setuptools import setup\nsetup()")
+
+        result = await server.handle_call_tool(
+            "generate_workflow",
+            {"python_version": "3.11"}
+        )
+
+        assert result.get("isError") == False
+
+        # Both workflows should exist
+        assert (tmp_path / ".github" / "workflows" / "pypi-publish.yml").exists()
+        assert (tmp_path / ".github" / "workflows" / "create-release.yml").exists()
+
+    finally:
+        os.chdir(original_cwd)

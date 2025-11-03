@@ -136,6 +136,8 @@ You have **two ways** to create releases:
 
 ### Option 1: GitHub Actions UI (Recommended) **NEW!**
 
+**Prerequisites**: Create a `RELEASE_PAT` secret (see [Setting Up Automated Release Publishing](#setting-up-automated-release-publishing) above)
+
 1. Go to **Actions** tab in your repository
 2. Select **Create Release** workflow
 3. Click **Run workflow**
@@ -143,16 +145,17 @@ You have **two ways** to create releases:
    - **patch**: Bug fixes (0.1.0 → 0.1.1)
    - **minor**: New features (0.1.1 → 0.2.0)
    - **major**: Breaking changes (0.2.0 → 1.0.0)
-5. Click **Run workflow**
+5. (Optional) Specify custom token secret name if not using `RELEASE_PAT`
+6. Click **Run workflow**
 
 The workflow will:
 - Calculate the next version number
 - Create and push a git tag
 - Create a GitHub Release with auto-generated notes
-- Automatically trigger the PyPI publish workflow
+- **Automatically trigger the PyPI publish workflow** (requires RELEASE_PAT)
 - Publish your package to PyPI
 
-**Benefits**: Zero-token usage for AI agents, works from anywhere, full automation.
+**Benefits**: Works from anywhere, full automation, easy for AI agents to use.
 
 ### Option 2: CLI (Local)
 
@@ -208,6 +211,78 @@ Before your workflow can successfully publish to PyPI or TestPyPI, you must conf
 4. **Save the Publisher:** Confirm and save the new publisher.
 
 Once configured, your GitHub Actions workflow will be able to publish packages without needing `PYPI_API_TOKEN` or `TEST_PYPI_API_TOKEN` secrets.
+
+## Setting Up Automated Release Publishing
+
+### Why You Need a Personal Access Token
+
+GitHub Actions workflows triggered by the default `GITHUB_TOKEN` cannot trigger other workflows (security feature to prevent infinite loops). To enable the `create-release.yml` workflow to automatically trigger `pypi-publish.yml` after creating a release tag, you need to provide a Personal Access Token (PAT) with appropriate permissions.
+
+**Without a PAT:** The create-release workflow will successfully create tags and GitHub Releases, but the PyPI publish workflow won't trigger automatically. You would need to manually trigger it.
+
+**With a PAT:** Full automation - create a release via GitHub UI, and your package automatically publishes to PyPI.
+
+### Creating the Required PAT
+
+1. **Generate a Personal Access Token**:
+   - Go to GitHub Settings → Developer settings → [Personal access tokens → Tokens (classic)](https://github.com/settings/tokens/new)
+   - Click "Generate new token (classic)"
+   - Give it a descriptive name: `Release Automation Token for <repo-name>`
+   - Set expiration (recommended: 1 year, with calendar reminder to rotate)
+   - Select scope: **repo** (full control of private repositories)
+   - Click "Generate token"
+   - **Copy the token immediately** (you won't see it again)
+
+2. **Add Token to Repository Secrets**:
+   - Go to your repository → Settings → Secrets and variables → Actions
+   - Click "New repository secret"
+   - Name: `RELEASE_PAT`
+   - Value: Paste the token you copied
+   - Click "Add secret"
+
+3. **Verify Setup**:
+   - Go to Actions tab → Create Release workflow → Run workflow
+   - Select release type (patch/minor/major)
+   - Leave token secret name as default (`RELEASE_PAT`)
+   - The workflow should complete successfully
+   - The PyPI publish workflow should trigger automatically
+   - Your package should be published to PyPI
+
+### Using a Custom Token Name (Optional)
+
+If your organization uses a different secret name (e.g., `GITHUB_ORG_TOKEN`), you can specify it when running the workflow:
+
+1. Go to Actions → Create Release
+2. Click "Run workflow"
+3. Fill in:
+   - **Release type**: patch/minor/major
+   - **Token secret name**: `GITHUB_ORG_TOKEN` (or your custom name)
+
+### Security Considerations
+
+- **Token Scope**: The PAT needs `repo` scope to push tags and trigger workflows
+- **Token Rotation**: Set expiration dates and rotate tokens regularly (recommended: annually)
+- **Access Control**: Only repository admins can add/view secrets
+- **Audit Trail**: GitHub logs all token usage in the repository audit log
+
+### Troubleshooting
+
+**Workflow fails with "Secret 'RELEASE_PAT' not found"**
+- You haven't created the PAT or added it to repository secrets
+- Follow the steps above to create and add the token
+
+**PyPI publish workflow still doesn't trigger**
+- Verify the PAT has `repo` scope (not just `public_repo`)
+- Check that the token hasn't expired
+- Ensure the token is added to repository secrets (not environment secrets)
+
+**Alternative: Use CLI Method**
+
+If you prefer not to set up a PAT, you can create releases locally using the CLI:
+```bash
+pypi-release patch  # This runs on your machine, no PAT needed
+```
+The CLI method pushes tags from your local machine, which doesn't have the GitHub Actions token limitation.
 
 ## CLI Options
 

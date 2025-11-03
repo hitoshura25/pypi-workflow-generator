@@ -12,6 +12,11 @@ on:
           - patch
           - minor
           - major
+      token_secret_name:
+        description: 'Name of the GitHub PAT secret to use for triggering workflows (default: RELEASE_PAT)'
+        required: false
+        type: string
+        default: 'RELEASE_PAT'
 
 jobs:
   create-release:
@@ -25,6 +30,22 @@ jobs:
         with:
           fetch-depth: 0  # Need full history for tags
           fetch-tags: true
+
+      - name: Validate PAT secret
+        env:
+          TOKEN_SECRET_NAME: ${{ github.event.inputs.token_secret_name || 'RELEASE_PAT' }}
+          TOKEN_VALUE: ${{ secrets[github.event.inputs.token_secret_name || 'RELEASE_PAT'] }}
+        run: |
+          if [ -z "$TOKEN_VALUE" ]; then
+            echo "::error::Secret '$TOKEN_SECRET_NAME' not found or is empty"
+            echo "::error::This workflow requires a Personal Access Token (PAT) to trigger the PyPI publish workflow"
+            echo "::error::Please follow these steps:"
+            echo "::error::1. Create a GitHub PAT with 'repo' scope: https://github.com/settings/tokens/new"
+            echo "::error::2. Add it to your repository secrets as '$TOKEN_SECRET_NAME'"
+            echo "::error::3. See documentation: https://github.com/${{ github.repository }}#setting-up-automated-release-publishing"
+            exit 1
+          fi
+          echo "✅ PAT secret '$TOKEN_SECRET_NAME' is configured"
 
       - name: Get latest tag
         id: get_latest_tag
@@ -62,12 +83,21 @@ jobs:
           echo "New version: $new_version"
 
       - name: Create and push tag
+        env:
+          GITHUB_TOKEN: ${{ secrets[github.event.inputs.token_secret_name || 'RELEASE_PAT'] }}
         run: |
           new_version="${{ steps.calc_version.outputs.new_version }}"
+
+          # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create annotated tag
           git tag -a "$new_version" -m "Release $new_version"
-          git push origin "$new_version"
+
+          # Push tag using PAT (this will trigger other workflows)
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git "$new_version"
+
           echo "✅ Created and pushed tag: $new_version"
 
       - name: Create GitHub Release
@@ -84,7 +114,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version**: ${{ steps.calc_version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
           echo "**Type**: ${{ github.event.inputs.release_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Token Used**: ${{ github.event.inputs.token_secret_name || 'RELEASE_PAT' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "The tag has been pushed and will trigger the PyPI publish workflow." >> $GITHUB_STEP_SUMMARY
+          echo "The tag has been pushed and will trigger the PyPI publish workflow automatically." >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "[View Release](https://github.com/${{ github.repository }}/releases/tag/${{ steps.calc_version.outputs.new_version }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Release](https://github.com/${{ github.repository }}/releases/tag/${{ steps.calc_version.outputs.new_version }})" >> $GITHUB_STEP_SUMMARY
+          echo "- [View Publish Workflow](https://github.com/${{ github.repository }}/actions/workflows/pypi-publish.yml)" >> $GITHUB_STEP_SUMMARY

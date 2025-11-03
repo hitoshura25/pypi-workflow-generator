@@ -162,13 +162,21 @@ Generate GitHub Actions workflow for creating releases via UI. This allows manua
 
 **Use Case**: Use this when you only want to add the release creation workflow to an existing project, or when you used `include_release_workflow: false` with `generate_workflow`.
 
+**Important Setup Note**: The generated workflow requires a Personal Access Token (PAT) to trigger the PyPI publish workflow automatically. Users must:
+1. Create a GitHub PAT with `repo` scope
+2. Add it as a repository secret named `RELEASE_PAT`
+3. See the README "Setting Up Automated Release Publishing" section for detailed instructions
+
+**Why is a PAT required?** GitHub Actions workflows triggered by the default `GITHUB_TOKEN` cannot trigger other workflows (security feature). A PAT allows the tag push to trigger the PyPI publish workflow automatically.
+
 **Workflow Features**:
 - Manual trigger via GitHub Actions UI
 - Choose major/minor/patch version bump
+- Configurable token secret name (default: `RELEASE_PAT`)
 - Automatic version calculation from latest git tag
-- Creates and pushes git tag
+- Creates and pushes git tag using PAT
 - Creates GitHub Release with auto-generated notes
-- Automatically triggers PyPI publish workflow
+- Automatically triggers PyPI publish workflow (when PAT is configured)
 
 ## Example Workflows
 
@@ -379,6 +387,12 @@ A: Re-run `generate_workflow` or `generate_release_workflow` with desired parame
 
 **Q: Can I generate only one workflow instead of both?**
 A: Yes! Use `include_release_workflow: false` with `generate_workflow` to skip the release workflow, or use `generate_release_workflow` alone to generate only the release workflow.
+
+**Q: Why does the release workflow need a Personal Access Token (PAT)?**
+A: GitHub Actions workflows triggered by the default `GITHUB_TOKEN` cannot trigger other workflows (security feature to prevent infinite loops). To automatically trigger the PyPI publish workflow after creating a release, you need to provide a PAT with `repo` scope as a repository secret named `RELEASE_PAT`. See the README "Setting Up Automated Release Publishing" section for detailed setup instructions.
+
+**Q: Can I use the MCP tool to create releases without a PAT?**
+A: Yes! The MCP `create_release` tool runs locally on your machine (not in GitHub Actions), so it doesn't have this limitation. It will trigger the PyPI publish workflow without needing a PAT. However, the `generate_release_workflow` tool generates a workflow that DOES require a PAT for automatic triggering.
 
 **Q: Can I customize the generated files?**
 A: Yes! All generated files can be edited after creation. They're standard Python project files.

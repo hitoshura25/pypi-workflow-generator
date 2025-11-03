@@ -136,7 +136,7 @@ You have **two ways** to create releases:
 
 ### Option 1: GitHub Actions UI (Recommended) **NEW!**
 
-**Prerequisites**: Create a `RELEASE_PAT` secret (see [Setting Up Automated Release Publishing](#setting-up-automated-release-publishing) above)
+**Prerequisites**: Create a `RELEASE_PAT` secret (see [Setting Up Automated Release Publishing](#setting-up-automated-release-publishing))
 
 1. Go to **Actions** tab in your repository
 2. Select **Create Release** workflow

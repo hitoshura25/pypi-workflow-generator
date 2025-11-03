@@ -30,6 +30,7 @@ jobs:
         with:
           fetch-depth: 0  # Need full history for tags
           fetch-tags: true
+          persist-credentials: false  # Prevent default token from being stored in git config
 
       - name: Validate PAT secret
         env:
@@ -84,7 +85,7 @@ jobs:
 
       - name: Create and push tag
         env:
-          GITHUB_TOKEN: ${{ secrets[github.event.inputs.token_secret_name || 'RELEASE_PAT'] }}
+          RELEASE_TOKEN: ${{ secrets[github.event.inputs.token_secret_name || 'RELEASE_PAT'] }}
         run: |
           new_version="${{ steps.calc_version.outputs.new_version }}"
 
@@ -96,7 +97,8 @@ jobs:
           git tag -a "$new_version" -m "Release $new_version"
 
           # Push tag using PAT (this will trigger other workflows)
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git "$new_version"
+          # Note: Using RELEASE_TOKEN instead of GITHUB_TOKEN to avoid conflict with default token
+          git push https://x-access-token:${RELEASE_TOKEN}@github.com/${{ github.repository }}.git "$new_version"
 
           echo "✅ Created and pushed tag: $new_version"
 

@@ -29,25 +29,6 @@ jobs:
           fetch-depth: 0 # Required for setuptools_scm
           fetch-tags: true
 
-      - name: Debug git state for version detection
-        run: |
-          echo "=== Git Describe Output ==="
-          git describe --tags --long --dirty --always
-          echo ""
-          echo "=== Current HEAD ==="
-          git rev-parse HEAD
-          echo ""
-          echo "=== All Tags (last 10) ==="
-          git tag -l | sort -V | tail -10
-          echo ""
-          echo "=== Tags at HEAD ==="
-          git tag --points-at HEAD
-          echo ""
-          echo "=== GitHub Context ==="
-          echo "github.ref: {% raw %}${{ github.ref }}{% endraw %}"
-          echo "github.sha: {% raw %}${{ github.sha }}{% endraw %}"
-          echo "github.event_name: {% raw %}${{ github.event_name }}{% endraw %}"
-
       - name: Set up Python {{ python_version }}
         uses: actions/setup-python@v4
         with:

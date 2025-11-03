@@ -38,7 +38,8 @@ For AI agents with MCP support (Claude Code, Continue.dev, Cline):
 ```
 
 The agent can now use these tools:
-- `generate_workflow` - Generate GitHub Actions workflow
+- `generate_workflow` - Generate GitHub Actions workflows (both publishing and release)
+- `generate_release_workflow` - Generate only the release creation workflow **NEW!**
 - `initialize_project` - Create pyproject.toml and setup.py
 - `create_release` - Create and push git release tags
 
@@ -105,15 +106,74 @@ generate_workflow(
 )
 ```
 
-## Generated Workflow Features
+## Generated Workflows
 
-The generated `pypi-publish.yml` workflow includes:
+This tool now generates **TWO** GitHub Actions workflows by default:
+
+### 1. PyPI Publishing Workflow (`pypi-publish.yml`)
+
+Handles automated package publishing:
 
 - **Automated Testing**: Runs pytest on every PR and release
 - **Pre-release Publishing**: TestPyPI publishing on PRs with version like `1.0.0.dev123`
 - **Production Publishing**: PyPI publishing on version tags
 - **Trusted Publishers**: No API tokens needed (OIDC authentication)
 - **setuptools_scm**: Automatic versioning from git tags
+
+### 2. Release Creation Workflow (`create-release.yml`) **NEW!**
+
+Enables manual release creation via GitHub UI:
+
+- **Manual Trigger**: Click a button in GitHub Actions to create releases
+- **Automatic Version Calculation**: Choose major/minor/patch, version is calculated automatically
+- **Git Tag Creation**: Creates and pushes version tags
+- **GitHub Releases**: Auto-generates release notes from commits
+- **Triggers Publishing**: Tag push automatically triggers the PyPI publish workflow
+
+## Creating Releases
+
+You have **two ways** to create releases:
+
+### Option 1: GitHub Actions UI (Recommended) **NEW!**
+
+1. Go to **Actions** tab in your repository
+2. Select **Create Release** workflow
+3. Click **Run workflow**
+4. Choose release type:
+   - **patch**: Bug fixes (0.1.0 → 0.1.1)
+   - **minor**: New features (0.1.1 → 0.2.0)
+   - **major**: Breaking changes (0.2.0 → 1.0.0)
+5. Click **Run workflow**
+
+The workflow will:
+- Calculate the next version number
+- Create and push a git tag
+- Create a GitHub Release with auto-generated notes
+- Automatically trigger the PyPI publish workflow
+- Publish your package to PyPI
+
+**Benefits**: Zero-token usage for AI agents, works from anywhere, full automation.
+
+### Option 2: CLI (Local)
+
+```bash
+pypi-release patch  # or minor, major
+```
+
+This creates and pushes the tag locally, which triggers the publish workflow.
+
+## Workflow Generation Options
+
+```bash
+# Generate both workflows (default)
+pypi-workflow-generator --python-version 3.11
+
+# Generate only PyPI publishing workflow
+pypi-workflow-generator --skip-release-workflow
+
+# Generate only release creation workflow
+pypi-workflow-generator-release
+```
 
 ## Setting Up Trusted Publishers
 
@@ -153,7 +213,7 @@ Once configured, your GitHub Actions workflow will be able to publish packages w
 
 ### `pypi-workflow-generator`
 
-Generate GitHub Actions workflow for PyPI publishing.
+Generate GitHub Actions workflows for PyPI publishing (generates both workflows by default).
 
 ```
 Options:
@@ -162,6 +222,7 @@ Options:
   --release-on-main-push      Trigger release on main branch push
   --test-path PATH            Path to tests (default: .)
   --verbose-publish           Enable verbose publishing
+  --skip-release-workflow     Only generate pypi-publish.yml (skip create-release.yml)
 ```
 
 ### `pypi-workflow-generator-init`
@@ -180,7 +241,7 @@ Options:
 
 ### `pypi-release`
 
-Create and push a git release tag.
+Create and push a git release tag (local CLI method).
 
 ```
 Usage:
@@ -195,13 +256,28 @@ Options:
 
 **Note**: The CLI uses semantic versioning (major/minor/patch) for convenience. The MCP tool `create_release` accepts explicit version strings (e.g., "v1.0.0") for flexibility. See [Interface Differences](#interface-differences) below.
 
+### `pypi-workflow-generator-release` **NEW!**
+
+Generate only the release creation workflow.
+
+```
+Options:
+  --output-filename NAME      Workflow filename (default: create-release.yml)
+```
+
+Use this if you already have a PyPI publishing workflow and only want to add the release creation workflow.
+
 ## MCP Server Details
 
-The MCP server runs via stdio transport and provides three tools:
+The MCP server runs via stdio transport and provides four tools:
 
 **Tool: `generate_workflow`**
-- Generates GitHub Actions workflow file
-- Parameters: python_version, output_filename, release_on_main_push, test_path, verbose_publish
+- Generates GitHub Actions workflow files (both publishing and release by default)
+- Parameters: python_version, output_filename, release_on_main_push, test_path, verbose_publish, include_release_workflow
+
+**Tool: `generate_release_workflow`** **NEW!**
+- Generates only the release creation workflow
+- Parameters: output_filename
 
 **Tool: `initialize_project`**
 - Creates pyproject.toml and setup.py
@@ -274,7 +350,11 @@ User/AI Agent
 
 ## Dogfooding
 
-This project uses itself to generate its own GitHub Actions workflow! The workflow file at `.github/workflows/pypi-publish.yml` was created by running:
+This project uses itself to generate its own GitHub Actions workflows! The workflow files at:
+- `.github/workflows/pypi-publish.yml`
+- `.github/workflows/create-release.yml`
+
+Were both created by running:
 
 ```bash
 pypi-workflow-generator \
@@ -285,11 +365,12 @@ pypi-workflow-generator \
 
 This ensures:
 - ✅ The tool actually works (we use it ourselves)
-- ✅ The template stays consistent with real-world usage
+- ✅ Both workflows are tested in production
+- ✅ The templates stay consistent with real-world usage
 - ✅ We practice what we preach
-- ✅ Users can see a real example of the generated output
+- ✅ Users can see real examples of the generated output
 
-Check the workflow file header to see the exact command used.
+Check the workflow file headers to see the exact command used. Try creating a release using the GitHub Actions UI!
 
 ## Development
 

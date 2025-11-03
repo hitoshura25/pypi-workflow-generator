@@ -17,7 +17,8 @@ def generate_workflow(
     release_on_main_push: bool = False,
     test_path: str = '.',
     base_output_dir: Optional[str] = None,
-    verbose_publish: bool = False
+    verbose_publish: bool = False,
+    include_release_workflow: bool = True
 ) -> Dict[str, Any]:
     """
     Generate GitHub Actions workflow for PyPI publishing.
@@ -29,9 +30,10 @@ def generate_workflow(
         test_path: Path to tests directory
         base_output_dir: Custom output directory (default: .github/workflows)
         verbose_publish: Enable verbose mode for publish actions
+        include_release_workflow: Also generate create-release.yml workflow (default: True)
 
     Returns:
-        Dict with success status and generated file path
+        Dict with success status and generated file path(s)
 
     Raises:
         FileNotFoundError: If pyproject.toml or setup.py missing
@@ -69,11 +71,23 @@ def generate_workflow(
     with open(full_output_path, 'w') as f:
         f.write(workflow_content)
 
-    return {
+    result = {
         'success': True,
         'file_path': full_output_path,
-        'message': f"Successfully generated {full_output_path}"
+        'message': f"Successfully generated {full_output_path}",
+        'files_created': [full_output_path]
     }
+
+    # Also generate release workflow by default
+    if include_release_workflow:
+        release_result = generate_release_workflow(
+            base_output_dir=base_output_dir
+        )
+        if release_result['success']:
+            result['files_created'].append(release_result['file_path'])
+            result['message'] += f"\nSuccessfully generated {release_result['file_path']}"
+
+    return result
 
 
 def initialize_project(
@@ -167,3 +181,56 @@ def create_git_release(version: str) -> Dict[str, Any]:
             'error': 'git not found',
             'message': 'Git is not installed or not in PATH'
         }
+
+
+def generate_release_workflow(
+    output_filename: str = 'create-release.yml',
+    base_output_dir: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Generate GitHub Actions workflow for automated release creation.
+
+    This workflow allows users to create releases via GitHub Actions UI,
+    automating version calculation, tag creation, and GitHub Release generation.
+
+    Args:
+        output_filename: Name of generated workflow file (default: 'create-release.yml')
+        base_output_dir: Custom output directory (default: .github/workflows)
+
+    Returns:
+        Dict with:
+            - success (bool): Whether generation succeeded
+            - file_path (str): Full path to generated file
+            - message (str): Status message
+
+    Example:
+        >>> result = generate_release_workflow()
+        >>> print(result['message'])
+        Successfully generated .github/workflows/create-release.yml
+    """
+    # Get template directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Set up Jinja2 environment
+    env = Environment(loader=FileSystemLoader(script_dir))
+    template = env.get_template('create_release.yml.j2')
+
+    # Render template (no variables needed for Phase 1)
+    workflow_content = template.render()
+
+    # Construct output path
+    output_dir = base_output_dir if base_output_dir else os.path.join(
+        os.getcwd(), '.github', 'workflows'
+    )
+    os.makedirs(output_dir, exist_ok=True)
+    full_output_path = os.path.join(output_dir, output_filename)
+
+    # Write workflow file
+    with open(full_output_path, 'w') as f:
+        f.write(workflow_content)
+
+    return {
+        'success': True,
+        'file_path': full_output_path,
+        'message': f"Successfully generated {full_output_path}"
+    }

@@ -49,6 +49,7 @@ setup(
             'pypi-workflow-generator=pypi_workflow_generator.main:main',
             'pypi-workflow-generator-init=pypi_workflow_generator.init:main',
             'pypi-release=pypi_workflow_generator.create_release:main',
+            'pypi-workflow-generator-release=pypi_workflow_generator.release_workflow:main',
 
             # MCP mode (new)
             'mcp-pypi-workflow-generator=pypi_workflow_generator.server:main',

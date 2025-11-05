@@ -79,7 +79,7 @@ pypi-workflow-generator-init \
 
 **Generate workflows**:
 ```bash
-pypi-workflow-generator --package-name my-awesome-package
+pypi-workflow-generator
 ```
 
 This creates 3 workflow files:
@@ -235,10 +235,7 @@ Generate all 3 GitHub Actions workflows for PyPI publishing.
 
 ```
 Usage:
-  pypi-workflow-generator --package-name PACKAGE [options]
-
-Required:
-  --package-name NAME         Package name (required for validation)
+  pypi-workflow-generator [options]
 
 Options:
   --python-version VERSION    Python version (default: 3.11)
@@ -246,7 +243,7 @@ Options:
   --verbose-publish           Enable verbose publishing
 
 Generates:
-  .github/workflows/_reusable-build-publish.yml
+  .github/workflows/_reusable-test-build.yml
   .github/workflows/release.yml
   .github/workflows/test-pr.yml
 ```
@@ -354,7 +351,6 @@ Were all created by running:
 
 ```bash
 pypi-workflow-generator \
-  --package-name pypi-workflow-generator \
   --python-version 3.11 \
   --test-path pypi_workflow_generator/ \
   --verbose-publish

@@ -17,7 +17,7 @@ def main():
 Generate GitHub Actions workflows for automated PyPI publishing.
 
 Generates 3 workflow files:
-  - _reusable-build-publish.yml (shared build/test/publish logic)
+  - _reusable-test-build.yml (shared test/build logic)
   - release.yml (manual releases via GitHub UI)
   - test-pr.yml (PR testing to TestPyPI)
 
@@ -28,10 +28,10 @@ Benefits:
   - Simple per-repository setup (only PyPI Trusted Publisher needed)
 
 Example:
-  pypi-workflow-generator --package-name mypackage
+  pypi-workflow-generator --python-version 3.11 --verbose-publish
 
 This creates:
-  .github/workflows/_reusable-build-publish.yml
+  .github/workflows/_reusable-test-build.yml
   .github/workflows/release.yml
   .github/workflows/test-pr.yml
         """,
@@ -52,11 +52,6 @@ This creates:
         '--verbose-publish',
         action='store_true',
         help='Enable verbose mode for PyPI publishing actions'
-    )
-    parser.add_argument(
-        '--package-name',
-        required=True,
-        help='Name of the Python package (required for validation)'
     )
 
     args = parser.parse_args()

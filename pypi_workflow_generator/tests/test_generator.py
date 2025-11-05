@@ -81,7 +81,9 @@ def test_generate_workflows_custom_arguments(tmp_path):
             reusable_content = f.read()
 
         assert "3.9" in reusable_content
-        assert "tests" in reusable_content or "test_path" in reusable_content
+        # Verify test_path is actually used in pytest command
+        assert "pytest" in reusable_content
+        assert "${{ inputs.test_path }}" in reusable_content or "pytest tests" in reusable_content
 
         # Check verbose publish in test-pr workflow (where publishing happens now)
         with open(test_pr_file, 'r') as f:

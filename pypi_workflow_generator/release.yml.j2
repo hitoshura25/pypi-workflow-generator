@@ -13,11 +13,12 @@ on:
           - major
 
 jobs:
-  release-and-publish:
+  create-tag:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # For pushing tags and creating releases
-      id-token: write  # For PyPI Trusted Publishing
+      contents: write
+    outputs:
+      new_version: ${{ steps.calc_version.outputs.new_version }}
 
     steps:
       - name: Checkout repository
@@ -84,33 +85,35 @@ jobs:
           echo "✅ Created local tag: $new_version"
           echo "   (Tag will be pushed only if build and tests succeed)"
 
-      - name: Debug git state for version detection
-        run: |
-          echo "=== Git Describe Output ==="
-          git describe --tags --long --dirty --always
-          echo ""
-          echo "=== Current HEAD ==="
-          git rev-parse HEAD
-          echo ""
-          echo "=== Tags at HEAD ==="
-          git tag --points-at HEAD
-{% endraw %}
-      - name: Set up Python {{ python_version }}
-        uses: actions/setup-python@v4
+  test-and-build:
+    needs: [create-tag]
+    uses: ./.github/workflows/_reusable-test-build.yml
+    with:{% endraw %}
+      python_version: '{{ python_version }}'
+      test_path: '{{ test_path }}'
+      ref: {% raw %}${{ needs.create-tag.outputs.new_version }}
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs: [create-tag, test-and-build]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # For PyPI Trusted Publishing
+      contents: write  # For pushing tags and creating releases
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          python-version: '{{ python_version }}'
+          fetch-depth: 0
+          fetch-tags: true
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
 
-      - name: Run tests with pytest
-        run: python -m pytest {{ test_path }}
-
-      - name: Build package
-        run: python -m build
-{% raw %}
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:{% endraw %}
@@ -118,7 +121,8 @@ jobs:
 {% raw %}
       - name: Push tag to remote
         run: |
-          new_version="${{ steps.calc_version.outputs.new_version }}"
+          new_version="${{ needs.create-tag.outputs.new_version }}"
+          git fetch --tags
           git push origin "$new_version"
           echo "✅ Pushed tag to remote: $new_version"
         env:
@@ -126,7 +130,7 @@ jobs:
 
       - name: Create GitHub Release
         run: |
-          new_version="${{ steps.calc_version.outputs.new_version }}"
+          new_version="${{ needs.create-tag.outputs.new_version }}"
           gh release create "$new_version" \
             --title "Release $new_version" \
             --generate-notes
@@ -135,7 +139,7 @@ jobs:
 
       - name: Summary
         run: |
-          new_version="${{ steps.calc_version.outputs.new_version }}"
+          new_version="${{ needs.create-tag.outputs.new_version }}"
           echo "### Release Published Successfully :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Version**: $new_version" >> $GITHUB_STEP_SUMMARY

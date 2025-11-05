@@ -146,14 +146,15 @@ Automatically tests pull requests:
 - **TestPyPI Publishing**: Publishes pre-release to TestPyPI for testing
 - **Uses Reusable Workflow**: Calls `_reusable-build-publish.yml` for DRY
 
-### 3. Reusable Build/Publish Workflow (`_reusable-build-publish.yml`)
+### 3. Reusable Test and Build Workflow (`_reusable-test-build.yml`)
 
-Shared logic called by `test-pr.yml`:
+Shared logic called by other workflows:
 
-- **Parameterized**: Accepts publish target (pypi/testpypi/none)
-- **Complete Pipeline**: Checkout → test → build → publish
-- **Reusable**: Single source of truth for build/test/publish logic
-- **Trusted Publishers**: Uses OIDC authentication for PyPI
+- **Parameterized**: Accepts Python version, test path, and git ref
+- **Test Pipeline**: Checkout → setup → test → build
+- **Artifact Export**: Uploads built packages for use by caller workflows
+- **Reusable**: Single source of truth for test/build logic
+- **Note**: Does NOT publish (publishing done by caller workflows for PyPI Trusted Publishing compatibility)
 
 ## Creating Releases
 
@@ -213,8 +214,10 @@ Before your workflow can successfully publish to PyPI or TestPyPI, you must conf
    - For **TestPyPI** (PR testing):
      - **Owner:** Same as above
      - **Repository:** Same as above
-     - **Workflow Name:** `_reusable-build-publish.yml`
+     - **Workflow Name:** `test-pr.yml`
      - **Environment (Optional):** Leave blank
+
+   **Important:** Do NOT use `_reusable-test-build.yml` as the workflow name. PyPI Trusted Publishing does not support reusable workflows. The workflow name must be the file that contains the publish step (`test-pr.yml` or `release.yml`).
 
 4. **Save the Publishers:** Confirm and save both publishers.
 
@@ -343,7 +346,7 @@ User/AI Agent
 ## Dogfooding
 
 This project uses itself to generate its own GitHub Actions workflows! The workflow files at:
-- `.github/workflows/_reusable-build-publish.yml`
+- `.github/workflows/_reusable-test-build.yml`
 - `.github/workflows/release.yml`
 - `.github/workflows/test-pr.yml`
 

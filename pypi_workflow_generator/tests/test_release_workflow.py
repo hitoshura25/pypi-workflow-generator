@@ -90,7 +90,7 @@ def test_generate_workflows_includes_all_three_files(tmp_path: Path):
         assert len(result['files_created']) == 3
 
         # All 3 workflows should exist
-        assert (output_dir / '_reusable-build-publish.yml').exists()
+        assert (output_dir / '_reusable-test-build.yml').exists()
         assert (output_dir / 'release.yml').exists()
         assert (output_dir / 'test-pr.yml').exists()
 

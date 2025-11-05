@@ -5,11 +5,28 @@ on:
     branches: [ main ]
 
 jobs:
-  test-and-publish:
-    uses: ./.github/workflows/_reusable-build-publish.yml
+  test-and-build:
+    uses: ./.github/workflows/_reusable-test-build.yml
+    with:
+      python_version: '{{ python_version }}'
+      test_path: '{{ test_path }}'
+
+  publish-to-testpypi:
+    name: Publish to TestPyPI
+    needs: [test-and-build]
+    runs-on: ubuntu-latest
     permissions:
       id-token: write  # For TestPyPI Trusted Publishing
-      contents: read
-    with:
-      publish_target: 'testpypi'
-    secrets: inherit
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: {{ verbose_publish | lower }}

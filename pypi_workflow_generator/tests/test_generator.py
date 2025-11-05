@@ -25,7 +25,7 @@ def test_generate_workflows_default_arguments(tmp_path):
         assert len(result['files_created']) == 3
 
         # Verify all 3 files exist
-        reusable_file = output_dir / '_reusable-build-publish.yml'
+        reusable_file = output_dir / '_reusable-test-build.yml'
         release_file = output_dir / 'release.yml'
         test_pr_file = output_dir / 'test-pr.yml'
 
@@ -68,7 +68,7 @@ def test_generate_workflows_custom_arguments(tmp_path):
         assert len(result['files_created']) == 3
 
         # Verify all 3 files exist
-        reusable_file = output_dir / '_reusable-build-publish.yml'
+        reusable_file = output_dir / '_reusable-test-build.yml'
         release_file = output_dir / 'release.yml'
         test_pr_file = output_dir / 'test-pr.yml'
 
@@ -76,12 +76,18 @@ def test_generate_workflows_custom_arguments(tmp_path):
         assert release_file.exists()
         assert test_pr_file.exists()
 
-        # Check custom Python version
+        # Check custom Python version in reusable workflow
         with open(reusable_file, 'r') as f:
-            content = f.read()
+            reusable_content = f.read()
 
-        assert "3.9" in content
-        assert "verbose: true" in content or "verbose_publish" in content
+        assert "3.9" in reusable_content
+        assert "tests" in reusable_content or "test_path" in reusable_content
+
+        # Check verbose publish in test-pr workflow (where publishing happens now)
+        with open(test_pr_file, 'r') as f:
+            test_pr_content = f.read()
+
+        assert "verbose: true" in test_pr_content
 
     finally:
         os.chdir(original_cwd)

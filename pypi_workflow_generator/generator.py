@@ -69,7 +69,7 @@ def generate_workflows(
 
     # Generate each workflow file
     workflow_templates = [
-        ('_reusable_build_publish.yml.j2', '_reusable-build-publish.yml'),
+        ('_reusable_test_build.yml.j2', '_reusable-test-build.yml'),
         ('release.yml.j2', 'release.yml'),
         ('test_pr.yml.j2', 'test-pr.yml')
     ]

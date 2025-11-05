@@ -1,12 +1,8 @@
-name: Reusable Build and Publish
+name: Reusable Test and Build
 
 on:
   workflow_call:
     inputs:
-      publish_target:
-        description: 'Where to publish: pypi, testpypi, or none'
-        required: true
-        type: string
       python_version:
         description: 'Python version to use'
         required: false
@@ -24,10 +20,9 @@ on:
         default: ''
 
 jobs:
-  build-and-publish:
+  test-and-build:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # Required for PyPI Trusted Publishing
       contents: read
 
     steps:
@@ -73,19 +68,8 @@ jobs:
       - name: Build package
         run: python -m build
 
-      - name: Set IS_PULL_REQUEST environment variable
-        if: github.event_name == 'pull_request'
-        run: echo "IS_PULL_REQUEST=true" >> $GITHUB_ENV
-
-      - name: Publish to TestPyPI
-        if: inputs.publish_target == 'testpypi'
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
         with:
-          repository-url: https://test.pypi.org/legacy/
-          verbose: {{ verbose_publish | lower }}
-
-      - name: Publish to PyPI
-        if: inputs.publish_target == 'pypi'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          verbose: {{ verbose_publish | lower }}
+          name: python-package-distributions
+          path: dist/

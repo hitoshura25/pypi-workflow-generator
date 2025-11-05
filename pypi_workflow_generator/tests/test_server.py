@@ -85,7 +85,7 @@ async def test_call_tool_generate_workflows(tmp_path):
         assert result.get("isError") == False
 
         # Verify all 3 files were created
-        reusable_path = tmp_path / ".github" / "workflows" / "_reusable-build-publish.yml"
+        reusable_path = tmp_path / ".github" / "workflows" / "_reusable-test-build.yml"
         release_path = tmp_path / ".github" / "workflows" / "release.yml"
         test_pr_path = tmp_path / ".github" / "workflows" / "test-pr.yml"
 
@@ -127,7 +127,7 @@ async def test_call_tool_generate_workflows_with_options(tmp_path):
         assert "Successfully generated" in result["content"][0]["text"]
 
         # Verify all 3 files were created
-        reusable_path = tmp_path / ".github" / "workflows" / "_reusable-build-publish.yml"
+        reusable_path = tmp_path / ".github" / "workflows" / "_reusable-test-build.yml"
         release_path = tmp_path / ".github" / "workflows" / "release.yml"
         test_pr_path = tmp_path / ".github" / "workflows" / "test-pr.yml"
 
@@ -320,7 +320,7 @@ async def test_generate_workflows_creates_all_files_via_mcp(tmp_path):
         assert result.get("isError") == False
 
         # All 3 workflows should exist
-        assert (tmp_path / ".github" / "workflows" / "_reusable-build-publish.yml").exists()
+        assert (tmp_path / ".github" / "workflows" / "_reusable-test-build.yml").exists()
         assert (tmp_path / ".github" / "workflows" / "release.yml").exists()
         assert (tmp_path / ".github" / "workflows" / "test-pr.yml").exists()
 

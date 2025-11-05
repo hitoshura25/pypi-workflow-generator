@@ -1,0 +1,91 @@
+name: Reusable Build and Publish
+
+on:
+  workflow_call:
+    inputs:
+      publish_target:
+        description: 'Where to publish: pypi, testpypi, or none'
+        required: true
+        type: string
+      python_version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.11'
+      test_path:
+        description: 'Path to tests'
+        required: false
+        type: string
+        default: 'pypi_workflow_generator/'
+      ref:
+        description: 'Git ref to checkout (tag, branch, or commit)'
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for PyPI Trusted Publishing
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0  # For setuptools_scm
+          fetch-tags: true
+
+      - name: Debug git state for version detection
+        run: |
+          echo "=== Git Describe Output ==="
+          git describe --tags --long --dirty --always
+          echo ""
+          echo "=== Current HEAD ==="
+          git rev-parse HEAD
+          echo ""
+          echo "=== All Tags (last 10) ==="
+          git tag -l | sort -V | tail -10
+          echo ""
+          echo "=== Tags at HEAD ==="
+          git tag --points-at HEAD
+          echo ""
+          echo "=== GitHub Context ==="
+          echo "github.ref: ${{ github.ref }}"
+          echo "github.sha: ${{ github.sha }}"
+          echo "Checkout ref: ${{ inputs.ref || github.ref }}"
+
+      - name: Set up Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests with pytest
+        run: python -m pytest ${{ inputs.test_path }}
+
+      - name: Build package
+        run: python -m build
+
+      - name: Set IS_PULL_REQUEST environment variable
+        if: github.event_name == 'pull_request'
+        run: echo "IS_PULL_REQUEST=true" >> $GITHUB_ENV
+
+      - name: Publish to TestPyPI
+        if: inputs.publish_target == 'testpypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
+
+      - name: Publish to PyPI
+        if: inputs.publish_target == 'pypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true

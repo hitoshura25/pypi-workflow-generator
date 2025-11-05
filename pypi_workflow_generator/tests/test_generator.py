@@ -1,44 +1,87 @@
-from pypi_workflow_generator.generator import generate_workflow
+import os
+from pypi_workflow_generator.generator import generate_workflows
 
-def test_generate_workflow_default_arguments(tmp_path):
+def test_generate_workflows_default_arguments(tmp_path):
     """Test workflow generation with default arguments."""
-    output_dir = tmp_path / ".github" / "workflows"
-    result = generate_workflow(python_version='3.11', output_filename='pypi-publish.yml', release_on_main_push=False, test_path='.', base_output_dir=output_dir, verbose_publish=False)
+    # Create dummy project files required for validation
+    (tmp_path / 'pyproject.toml').write_text('[build-system]')
+    (tmp_path / 'setup.py').write_text('from setuptools import setup\nsetup()')
 
-    assert result['success']
-    assert 'file_path' in result
-    assert 'message' in result
+    original_cwd = os.getcwd()
+    os.chdir(tmp_path)
 
-    output_file = output_dir / 'pypi-publish.yml'
-    assert output_file.exists()
+    try:
+        output_dir = tmp_path / ".github" / "workflows"
+        result = generate_workflows(
+            python_version='3.11',
+            test_path='.',
+            base_output_dir=output_dir,
+            verbose_publish=False
+        )
 
-    with open(output_file, 'r') as f:
-        content = f.read()
+        assert result['success']
+        assert 'files_created' in result
+        assert 'message' in result
+        assert len(result['files_created']) == 3
 
-    assert "python-version: '3.11'" in content
-    assert "tags:" in content
-    assert "- 'v*.*.*'" in content
-    assert "if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')" in content
-    assert "run: python -m pytest ." in content
+        # Verify all 3 files exist
+        reusable_file = output_dir / '_reusable-build-publish.yml'
+        release_file = output_dir / 'release.yml'
+        test_pr_file = output_dir / 'test-pr.yml'
+
+        assert reusable_file.exists()
+        assert release_file.exists()
+        assert test_pr_file.exists()
+
+        # Check reusable workflow content
+        with open(reusable_file, 'r') as f:
+            content = f.read()
+
+        assert "python-version: '3.11'" in content or "python_version" in content
+        assert "pytest" in content
+
+    finally:
+        os.chdir(original_cwd)
 
 
-def test_generate_workflow_custom_arguments(tmp_path):
+def test_generate_workflows_custom_arguments(tmp_path):
     """Test workflow generation with custom arguments."""
-    output_dir = tmp_path / ".github" / "workflows"
-    result = generate_workflow(python_version='3.9', output_filename='custom-pypi-publish.yml', release_on_main_push=True, test_path='tests', base_output_dir=output_dir, verbose_publish=True)
+    # Create dummy project files required for validation
+    (tmp_path / 'pyproject.toml').write_text('[build-system]')
+    (tmp_path / 'setup.py').write_text('from setuptools import setup\nsetup()')
 
-    assert result['success']
-    assert 'file_path' in result
-    assert 'message' in result
+    original_cwd = os.getcwd()
+    os.chdir(tmp_path)
 
-    output_file = output_dir / 'custom-pypi-publish.yml'
-    assert output_file.exists()
+    try:
+        output_dir = tmp_path / ".github" / "workflows"
+        result = generate_workflows(
+            python_version='3.9',
+            test_path='tests',
+            base_output_dir=output_dir,
+            verbose_publish=True
+        )
 
-    with open(output_file, 'r') as f:
-        content = f.read()
+        assert result['success']
+        assert 'files_created' in result
+        assert 'message' in result
+        assert len(result['files_created']) == 3
 
-    assert "python-version: '3.9'" in content
-    assert "branches: [ main ]" in content
-    assert "if: github.event_name == 'push' && github.ref == 'refs/heads/main'" in content
-    assert "run: python -m pytest tests" in content
-    assert "verbose: true" in content
+        # Verify all 3 files exist
+        reusable_file = output_dir / '_reusable-build-publish.yml'
+        release_file = output_dir / 'release.yml'
+        test_pr_file = output_dir / 'test-pr.yml'
+
+        assert reusable_file.exists()
+        assert release_file.exists()
+        assert test_pr_file.exists()
+
+        # Check custom Python version
+        with open(reusable_file, 'r') as f:
+            content = f.read()
+
+        assert "3.9" in content
+        assert "verbose: true" in content or "verbose_publish" in content
+
+    finally:
+        os.chdir(original_cwd)

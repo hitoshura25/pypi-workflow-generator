@@ -1,0 +1,15 @@
+name: Test and Publish to TestPyPI
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-publish:
+    uses: ./.github/workflows/_reusable-build-publish.yml
+    permissions:
+      id-token: write  # For TestPyPI Trusted Publishing
+      contents: read
+    with:
+      publish_target: 'testpypi'
+    secrets: inherit

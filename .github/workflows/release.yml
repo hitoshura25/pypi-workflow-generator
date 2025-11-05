@@ -91,7 +91,7 @@ jobs:
     with:
       python_version: '3.11'
       test_path: 'pypi_workflow_generator/'
-      ref: ${{ needs.create-tag.outputs.new_version }}
+      artifact_version: ${{ needs.create-tag.outputs.new_version }}
 
   publish-to-pypi:
     name: Publish to PyPI

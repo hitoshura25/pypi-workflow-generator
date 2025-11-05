@@ -11,7 +11,7 @@ import json
 import asyncio
 from typing import Any, Dict
 
-from .generator import generate_workflow, initialize_project, create_git_release, generate_release_workflow
+from .generator import generate_workflows, initialize_project, create_git_release
 
 
 class MCPServer:
@@ -30,25 +30,15 @@ class MCPServer:
         return {
             "tools": [
                 {
-                    "name": "generate_workflow",
-                    "description": "Generate GitHub Actions workflow for Python package publishing to PyPI with Trusted Publishers support",
+                    "name": "generate_workflows",
+                    "description": "Generate GitHub Actions workflows for Python package publishing to PyPI. Creates 3 files: _reusable-test-build.yml (shared test/build logic), release.yml (manual releases), and test-pr.yml (PR testing). No PAT required - uses default GITHUB_TOKEN.",
                     "inputSchema": {
                         "type": "object",
                         "properties": {
                             "python_version": {
                                 "type": "string",
-                                "description": "Python version to use in workflow",
+                                "description": "Python version to use in workflows",
                                 "default": "3.11"
-                            },
-                            "output_filename": {
-                                "type": "string",
-                                "description": "Name of generated workflow file",
-                                "default": "pypi-publish.yml"
-                            },
-                            "release_on_main_push": {
-                                "type": "boolean",
-                                "description": "Trigger release on every main branch push",
-                                "default": False
                             },
                             "test_path": {
                                 "type": "string",
@@ -57,13 +47,8 @@ class MCPServer:
                             },
                             "verbose_publish": {
                                 "type": "boolean",
-                                "description": "Enable verbose mode for publishing",
+                                "description": "Enable verbose mode for PyPI publishing",
                                 "default": False
-                            },
-                            "include_release_workflow": {
-                                "type": "boolean",
-                                "description": "Also generate create-release.yml workflow for manual releases",
-                                "default": True
                             }
                         },
                         "required": []
@@ -116,21 +101,6 @@ class MCPServer:
                         },
                         "required": ["version"]
                     }
-                },
-                {
-                    "name": "generate_release_workflow",
-                    "description": "Generate GitHub Actions workflow for creating releases via UI. Allows manual release creation with automatic version calculation and tag creation.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "output_filename": {
-                                "type": "string",
-                                "description": "Name of the workflow file",
-                                "default": "create-release.yml"
-                            }
-                        },
-                        "required": []
-                    }
                 }
             ]
         }
@@ -138,8 +108,8 @@ class MCPServer:
     async def handle_call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a tool with given arguments."""
         try:
-            if tool_name == "generate_workflow":
-                result = generate_workflow(**arguments)
+            if tool_name == "generate_workflows":
+                result = generate_workflows(**arguments)
                 return {
                     "content": [
                         {
@@ -164,18 +134,6 @@ class MCPServer:
 
             elif tool_name == "create_release":
                 result = create_git_release(arguments['version'])
-                return {
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": result['message']
-                        }
-                    ],
-                    "isError": not result['success']
-                }
-
-            elif tool_name == "generate_release_workflow":
-                result = generate_release_workflow(**arguments)
                 return {
                     "content": [
                         {

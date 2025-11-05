@@ -6,11 +6,13 @@ A dual-mode tool (MCP server + CLI) for generating GitHub Actions workflows for 
 
 - ✅ **Dual-Mode Operation**: Works as MCP server for AI agents OR traditional CLI for developers
 - ✅ **PyPI Trusted Publishers**: Secure publishing without API tokens
+- ✅ **No PAT Required**: Uses default GitHub token - zero additional setup
+- ✅ **Safe Tag Creation**: Tags only pushed after tests/build succeed
 - ✅ **Automated Versioning**: Uses setuptools_scm for git-based versioning
 - ✅ **Pre-release Testing**: Automatic TestPyPI publishing on pull requests
-- ✅ **Production Publishing**: Automatic PyPI publishing on version tags
+- ✅ **Production Publishing**: Manual releases via GitHub Actions UI
 - ✅ **Complete Project Initialization**: Generates pyproject.toml and setup.py
-- ✅ **Release Management**: Simple git tag creation for triggering releases
+- ✅ **DRY Architecture**: Reusable workflows for shared logic
 
 ## Installation
 
@@ -38,8 +40,7 @@ For AI agents with MCP support (Claude Code, Continue.dev, Cline):
 ```
 
 The agent can now use these tools:
-- `generate_workflow` - Generate GitHub Actions workflows (both publishing and release)
-- `generate_release_workflow` - Generate only the release creation workflow **NEW!**
+- `generate_workflows` - Generate all 3 GitHub Actions workflows (no PAT required!)
 - `initialize_project` - Create pyproject.toml and setup.py
 - `create_release` - Create and push git release tags
 
@@ -49,16 +50,18 @@ You: "Please set up a PyPI publishing workflow for my Python project"
 
 Claude: I'll help you set up a complete PyPI publishing workflow.
 
-[Calls initialize_project and generate_workflow tools]
+[Calls initialize_project and generate_workflows tools]
 
 ✅ Created:
   - pyproject.toml
   - setup.py
-  - .github/workflows/pypi-publish.yml
+  - .github/workflows/_reusable-test-build.yml
+  - .github/workflows/release.yml
+  - .github/workflows/test-pr.yml
 
 Next steps:
-1. Configure Trusted Publishers on PyPI
-2. Create a release: pypi-release patch
+1. Configure Trusted Publishers on PyPI and TestPyPI
+2. Create release via GitHub UI: Actions → "Release to PyPI"
 ```
 
 ### 2. CLI Mode (For Developers)
@@ -74,20 +77,29 @@ pypi-workflow-generator-init \
   --command-name my-command
 ```
 
-**Generate workflow**:
+**Generate workflows**:
 ```bash
-pypi-workflow-generator --python-version 3.11
+pypi-workflow-generator
 ```
+
+This creates 3 workflow files:
+- `_reusable-test-build.yml` - Shared test/build logic
+- `release.yml` - Manual releases via GitHub UI
+- `test-pr.yml` - PR testing to TestPyPI
 
 **Create a release**:
 ```bash
-pypi-release patch  # or 'minor' or 'major'
+# Via GitHub UI (recommended):
+# 1. Go to Actions → "Release to PyPI"
+# 2. Click "Run workflow"
+# 3. Select version bump type (patch/minor/major)
+# 4. Click "Run workflow"
 ```
 
 ### 3. Programmatic Use
 
 ```python
-from pypi_workflow_generator import generate_workflow, initialize_project
+from pypi_workflow_generator.generator import generate_workflows, initialize_project
 
 # Initialize project
 initialize_project(
@@ -99,88 +111,79 @@ initialize_project(
     command_name="my-cmd"
 )
 
-# Generate workflow
-generate_workflow(
+# Generate workflows
+generate_workflows(
     python_version="3.11",
-    release_on_main_push=False
+    test_path="tests/",
+    verbose_publish=True
 )
 ```
 
 ## Generated Workflows
 
-This tool now generates **TWO** GitHub Actions workflows by default:
+This tool generates **THREE** GitHub Actions workflows:
 
-### 1. PyPI Publishing Workflow (`pypi-publish.yml`)
+### 1. Release Workflow (`release.yml`)
 
-Handles automated package publishing:
+Manual release workflow triggered via GitHub UI:
 
-- **Automated Testing**: Runs pytest on every PR and release
-- **Pre-release Publishing**: TestPyPI publishing on PRs with version like `1.0.0.dev123`
-- **Production Publishing**: PyPI publishing on version tags
-- **Trusted Publishers**: No API tokens needed (OIDC authentication)
+- **Version Calculation**: Automatically calculates next version (patch/minor/major)
+- **Safe Tag Creation**: Creates tag locally first, tests/builds, then pushes only if successful
+- **Automated Testing**: Runs pytest before publishing
+- **Package Building**: Builds distribution packages
+- **PyPI Publishing**: Publishes to production PyPI via Trusted Publishers
+- **GitHub Release**: Creates GitHub Release with auto-generated notes
+- **No PAT Required**: Uses default `GITHUB_TOKEN`
 - **setuptools_scm**: Automatic versioning from git tags
 
-### 2. Release Creation Workflow (`create-release.yml`) **NEW!**
+### 2. PR Testing Workflow (`test-pr.yml`)
 
-Enables manual release creation via GitHub UI:
+Automatically tests pull requests:
 
-- **Manual Trigger**: Click a button in GitHub Actions to create releases
-- **Automatic Version Calculation**: Choose major/minor/patch, version is calculated automatically
-- **Git Tag Creation**: Creates and pushes version tags
-- **GitHub Releases**: Auto-generates release notes from commits
-- **Triggers Publishing**: Tag push automatically triggers the PyPI publish workflow
+- **Triggered on PRs**: Runs automatically when PRs are opened/updated
+- **Automated Testing**: Runs pytest on PR code
+- **Package Building**: Builds distribution to verify it's buildable
+- **TestPyPI Publishing**: Publishes pre-release to TestPyPI for testing
+- **Uses Reusable Workflow**: Calls `_reusable-test-build.yml` for DRY
+
+### 3. Reusable Test and Build Workflow (`_reusable-test-build.yml`)
+
+Shared logic called by other workflows:
+
+- **Parameterized**: Accepts Python version, test path, and git ref
+- **Test Pipeline**: Checkout → setup → test → build
+- **Artifact Export**: Uploads built packages for use by caller workflows
+- **Reusable**: Single source of truth for test/build logic
+- **Note**: Does NOT publish (publishing done by caller workflows for PyPI Trusted Publishing compatibility)
 
 ## Creating Releases
 
-You have **two ways** to create releases:
-
-### Option 1: GitHub Actions UI (Recommended) **NEW!**
-
-**Prerequisites**: Create a `RELEASE_PAT` secret (see [Setting Up Automated Release Publishing](#setting-up-automated-release-publishing))
+**Via GitHub Actions UI** (only method):
 
 1. Go to **Actions** tab in your repository
-2. Select **Create Release** workflow
+2. Select **Release to PyPI** workflow
 3. Click **Run workflow**
 4. Choose release type:
    - **patch**: Bug fixes (0.1.0 → 0.1.1)
    - **minor**: New features (0.1.1 → 0.2.0)
    - **major**: Breaking changes (0.2.0 → 1.0.0)
-5. (Optional) Specify custom token secret name if not using `RELEASE_PAT`
-6. Click **Run workflow**
+5. Click **Run workflow**
 
 The workflow will:
-- Calculate the next version number
-- Create and push a git tag
-- Create a GitHub Release with auto-generated notes
-- **Automatically trigger the PyPI publish workflow** (requires RELEASE_PAT)
-- Publish your package to PyPI
+1. ✅ Calculate the next version number
+2. ✅ Check if tag already exists
+3. ✅ Create tag locally (not pushed yet)
+4. ✅ Run tests
+5. ✅ Build package
+6. ✅ Publish to PyPI
+7. ✅ Push tag to repository (only if all above succeed)
+8. ✅ Create GitHub Release with auto-generated notes
 
-**Benefits**: Works from anywhere, full automation, easy for AI agents to use.
-
-### Option 2: CLI (Local)
-
-```bash
-pypi-release patch  # or minor, major
-```
-
-This creates and pushes the tag locally, which triggers the publish workflow.
-
-## Workflow Generation Options
-
-```bash
-# Generate both workflows (default)
-pypi-workflow-generator --python-version 3.11
-
-# Generate only PyPI publishing workflow
-pypi-workflow-generator --skip-release-workflow
-
-# Generate only release creation workflow
-pypi-workflow-generator-release
-```
+**Key Benefit**: Tags are only pushed if tests and build succeed, preventing orphaned tags for failed releases.
 
 ## Setting Up Trusted Publishers
 
-The generated GitHub Actions workflow (`pypi-publish.yml`) utilizes [PyPI Trusted Publishers](https://docs.pypi.org/trusted-publishers/) for secure package publishing. This method enhances security by allowing your GitHub Actions workflow to authenticate with PyPI using OpenID Connect (OIDC) instead of requiring you to store sensitive API tokens as GitHub secrets.
+The generated GitHub Actions workflows utilize [PyPI Trusted Publishers](https://docs.pypi.org/trusted-publishers/) for secure package publishing. This method enhances security by allowing your GitHub Actions workflow to authenticate with PyPI using OpenID Connect (OIDC) instead of requiring you to store sensitive API tokens as GitHub secrets.
 
 **Why Trusted Publishers?**
 - **Enhanced Security:** Eliminates the need to store PyPI API tokens, reducing the risk of token compromise.
@@ -199,105 +202,50 @@ Before your workflow can successfully publish to PyPI or TestPyPI, you must conf
      `https://[test.]pypi.org/manage/project/<your-package-name>/settings/publishing/`
    - Replace `<your-package-name>` with the actual name of your Python package (e.g., `pypi-workflow-generator`).
 
-3. **Add a New Trusted Publisher:**
+3. **Add Trusted Publishers:**
+   - You need to add **two** publishers (one for production, one for testing)
    - Click on the "Add a new publisher" button.
    - Select "GitHub Actions" as the publisher type.
-   - Provide the following details:
-     - **Owner:** The GitHub username or organization that owns your repository (e.g., `hitoshura25`).
-     - **Repository:** The name of your GitHub repository (e.g., `pypi-workflow-generator`).
-     - **Workflow Name:** The name of your workflow file (e.g., `pypi-publish.yml`).
-     - **Environment (Optional):** If your GitHub Actions workflow uses a specific environment, specify its name here. Otherwise, leave it blank.
+   - For **PyPI** (production releases):
+     - **Owner:** Your GitHub username or organization (e.g., `your-username`)
+     - **Repository:** Your repository name (e.g., `my-awesome-package`)
+     - **Workflow Name:** `release.yml`
+     - **Environment (Optional):** Leave blank
+   - For **TestPyPI** (PR testing):
+     - **Owner:** Same as above
+     - **Repository:** Same as above
+     - **Workflow Name:** `test-pr.yml`
+     - **Environment (Optional):** Leave blank
 
-4. **Save the Publisher:** Confirm and save the new publisher.
+   **Important:** Do NOT use `_reusable-test-build.yml` as the workflow name. PyPI Trusted Publishing does not support reusable workflows. The workflow name must be the file that contains the publish step (`test-pr.yml` or `release.yml`).
 
-Once configured, your GitHub Actions workflow will be able to publish packages without needing `PYPI_API_TOKEN` or `TEST_PYPI_API_TOKEN` secrets.
+4. **Save the Publishers:** Confirm and save both publishers.
 
-## Setting Up Automated Release Publishing
+Once configured, your GitHub Actions workflows will be able to publish packages without needing any API tokens. **No PAT or GitHub App setup required!**
 
-### Why You Need a Personal Access Token
+## That's It!
 
-GitHub Actions workflows triggered by the default `GITHUB_TOKEN` cannot trigger other workflows (security feature to prevent infinite loops). To enable the `create-release.yml` workflow to automatically trigger `pypi-publish.yml` after creating a release tag, you need to provide a Personal Access Token (PAT) with appropriate permissions.
-
-**Without a PAT:** The create-release workflow will successfully create tags and GitHub Releases, but the PyPI publish workflow won't trigger automatically. You would need to manually trigger it.
-
-**With a PAT:** Full automation - create a release via GitHub UI, and your package automatically publishes to PyPI.
-
-### Creating the Required PAT
-
-1. **Generate a Personal Access Token**:
-   - Go to GitHub Settings → Developer settings → [Personal access tokens → Tokens (classic)](https://github.com/settings/tokens/new)
-   - Click "Generate new token (classic)"
-   - Give it a descriptive name: `Release Automation Token for <repo-name>`
-   - Set expiration (recommended: 1 year, with calendar reminder to rotate)
-   - Select scope: **repo** (full control of private repositories)
-   - Click "Generate token"
-   - **Copy the token immediately** (you won't see it again)
-
-2. **Add Token to Repository Secrets**:
-   - Go to your repository → Settings → Secrets and variables → Actions
-   - Click "New repository secret"
-   - Name: `RELEASE_PAT`
-   - Value: Paste the token you copied
-   - Click "Add secret"
-
-3. **Verify Setup**:
-   - Go to Actions tab → Create Release workflow → Run workflow
-   - Select release type (patch/minor/major)
-   - Leave token secret name as default (`RELEASE_PAT`)
-   - The workflow should complete successfully
-   - The PyPI publish workflow should trigger automatically
-   - Your package should be published to PyPI
-
-### Using a Custom Token Name (Optional)
-
-If your organization uses a different secret name (e.g., `GITHUB_ORG_TOKEN`), you can specify it when running the workflow:
-
-1. Go to Actions → Create Release
-2. Click "Run workflow"
-3. Fill in:
-   - **Release type**: patch/minor/major
-   - **Token secret name**: `GITHUB_ORG_TOKEN` (or your custom name)
-
-### Security Considerations
-
-- **Token Scope**: The PAT needs `repo` scope to push tags and trigger workflows
-- **Token Rotation**: Set expiration dates and rotate tokens regularly (recommended: annually)
-- **Access Control**: Only repository admins can add/view secrets
-- **Audit Trail**: GitHub logs all token usage in the repository audit log
-
-### Troubleshooting
-
-**Workflow fails with "Secret 'RELEASE_PAT' not found"**
-- You haven't created the PAT or added it to repository secrets
-- Follow the steps above to create and add the token
-
-**PyPI publish workflow still doesn't trigger**
-- Verify the PAT has `repo` scope (not just `public_repo`)
-- Check that the token hasn't expired
-- Ensure the token is added to repository secrets (not environment secrets)
-
-**Alternative: Use CLI Method**
-
-If you prefer not to set up a PAT, you can create releases locally using the CLI:
-```bash
-pypi-release patch  # This runs on your machine, no PAT needed
-```
-The CLI method pushes tags from your local machine, which doesn't have the GitHub Actions token limitation.
+With Trusted Publishers configured, you're ready to go. The workflows use GitHub's default `GITHUB_TOKEN` for all operations - no additional authentication setup needed.
 
 ## CLI Options
 
 ### `pypi-workflow-generator`
 
-Generate GitHub Actions workflows for PyPI publishing (generates both workflows by default).
+Generate all 3 GitHub Actions workflows for PyPI publishing.
 
 ```
+Usage:
+  pypi-workflow-generator [options]
+
 Options:
   --python-version VERSION    Python version (default: 3.11)
-  --output-filename NAME      Workflow filename (default: pypi-publish.yml)
-  --release-on-main-push      Trigger release on main branch push
   --test-path PATH            Path to tests (default: .)
   --verbose-publish           Enable verbose publishing
-  --skip-release-workflow     Only generate pypi-publish.yml (skip create-release.yml)
+
+Generates:
+  .github/workflows/_reusable-test-build.yml
+  .github/workflows/release.yml
+  .github/workflows/test-pr.yml
 ```
 
 ### `pypi-workflow-generator-init`
@@ -314,45 +262,14 @@ Options:
   --command-name NAME         CLI command name (required)
 ```
 
-### `pypi-release`
-
-Create and push a git release tag (local CLI method).
-
-```
-Usage:
-  pypi-release {major,minor,patch} [--overwrite]
-
-Arguments:
-  {major,minor,patch}  The type of release (major, minor, or patch)
-
-Options:
-  --overwrite          Overwrite an existing tag
-```
-
-**Note**: The CLI uses semantic versioning (major/minor/patch) for convenience. The MCP tool `create_release` accepts explicit version strings (e.g., "v1.0.0") for flexibility. See [Interface Differences](#interface-differences) below.
-
-### `pypi-workflow-generator-release` **NEW!**
-
-Generate only the release creation workflow.
-
-```
-Options:
-  --output-filename NAME      Workflow filename (default: create-release.yml)
-```
-
-Use this if you already have a PyPI publishing workflow and only want to add the release creation workflow.
-
 ## MCP Server Details
 
-The MCP server runs via stdio transport and provides four tools:
+The MCP server runs via stdio transport and provides three tools:
 
-**Tool: `generate_workflow`**
-- Generates GitHub Actions workflow files (both publishing and release by default)
-- Parameters: python_version, output_filename, release_on_main_push, test_path, verbose_publish, include_release_workflow
-
-**Tool: `generate_release_workflow`** **NEW!**
-- Generates only the release creation workflow
-- Parameters: output_filename
+**Tool: `generate_workflows`**
+- Generates all 3 GitHub Actions workflow files at once
+- Creates: _reusable-test-build.yml, release.yml, and test-pr.yml
+- Parameters: python_version, test_path, verbose_publish
 
 **Tool: `initialize_project`**
 - Creates pyproject.toml and setup.py
@@ -426,10 +343,11 @@ User/AI Agent
 ## Dogfooding
 
 This project uses itself to generate its own GitHub Actions workflows! The workflow files at:
-- `.github/workflows/pypi-publish.yml`
-- `.github/workflows/create-release.yml`
+- `.github/workflows/_reusable-test-build.yml`
+- `.github/workflows/release.yml`
+- `.github/workflows/test-pr.yml`
 
-Were both created by running:
+Were all created by running:
 
 ```bash
 pypi-workflow-generator \
@@ -440,7 +358,7 @@ pypi-workflow-generator \
 
 This ensures:
 - ✅ The tool actually works (we use it ourselves)
-- ✅ Both workflows are tested in production
+- ✅ All 3 workflows are tested in production
 - ✅ The templates stay consistent with real-world usage
 - ✅ We practice what we preach
 - ✅ Users can see real examples of the generated output

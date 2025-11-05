@@ -138,7 +138,9 @@ async def test_call_tool_generate_workflows_with_options(tmp_path):
         # Verify custom options
         content = reusable_path.read_text()
         assert "3.10" in content
-        assert "tests/" in content or "test_path" in content
+        # Verify test_path is actually used in pytest command
+        assert "pytest" in content
+        assert "${{ inputs.test_path }}" in content or "pytest tests/" in content
 
     finally:
         os.chdir(original_cwd)

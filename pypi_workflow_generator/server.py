@@ -31,7 +31,7 @@ class MCPServer:
             "tools": [
                 {
                     "name": "generate_workflows",
-                    "description": "Generate GitHub Actions workflows for Python package publishing to PyPI. Creates 3 files: _reusable-build-publish.yml (shared logic), release.yml (manual releases), and test-pr.yml (PR testing). No PAT required - uses default GITHUB_TOKEN.",
+                    "description": "Generate GitHub Actions workflows for Python package publishing to PyPI. Creates 3 files: _reusable-test-build.yml (shared test/build logic), release.yml (manual releases), and test-pr.yml (PR testing). No PAT required - uses default GITHUB_TOKEN.",
                     "inputSchema": {
                         "type": "object",
                         "properties": {

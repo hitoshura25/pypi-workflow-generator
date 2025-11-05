@@ -21,7 +21,7 @@ def generate_workflows(
     Generate GitHub Actions workflows for PyPI publishing.
 
     Generates 3 workflow files:
-        - _reusable-build-publish.yml (shared build/test/publish logic)
+        - _reusable-test-build.yml (shared test/build logic)
         - release.yml (manual releases via GitHub UI)
         - test-pr.yml (PR testing to TestPyPI)
 

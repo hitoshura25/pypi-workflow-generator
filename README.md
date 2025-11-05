@@ -55,7 +55,7 @@ Claude: I'll help you set up a complete PyPI publishing workflow.
 ✅ Created:
   - pyproject.toml
   - setup.py
-  - .github/workflows/_reusable-build-publish.yml
+  - .github/workflows/_reusable-test-build.yml
   - .github/workflows/release.yml
   - .github/workflows/test-pr.yml
 
@@ -83,7 +83,7 @@ pypi-workflow-generator
 ```
 
 This creates 3 workflow files:
-- `_reusable-build-publish.yml` - Shared build/test/publish logic
+- `_reusable-test-build.yml` - Shared test/build logic
 - `release.yml` - Manual releases via GitHub UI
 - `test-pr.yml` - PR testing to TestPyPI
 
@@ -144,7 +144,7 @@ Automatically tests pull requests:
 - **Automated Testing**: Runs pytest on PR code
 - **Package Building**: Builds distribution to verify it's buildable
 - **TestPyPI Publishing**: Publishes pre-release to TestPyPI for testing
-- **Uses Reusable Workflow**: Calls `_reusable-build-publish.yml` for DRY
+- **Uses Reusable Workflow**: Calls `_reusable-test-build.yml` for DRY
 
 ### 3. Reusable Test and Build Workflow (`_reusable-test-build.yml`)
 
@@ -268,7 +268,7 @@ The MCP server runs via stdio transport and provides three tools:
 
 **Tool: `generate_workflows`**
 - Generates all 3 GitHub Actions workflow files at once
-- Creates: _reusable-build-publish.yml, release.yml, and test-pr.yml
+- Creates: _reusable-test-build.yml, release.yml, and test-pr.yml
 - Parameters: python_version, test_path, verbose_publish
 
 **Tool: `initialize_project`**

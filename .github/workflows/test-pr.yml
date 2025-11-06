@@ -45,7 +45,7 @@ jobs:
     with:
       python_version: '3.11'
       test_path: 'pypi_workflow_generator/'
-      artifact_version: ${{ needs.get-new-version.outputs.new_version }}`
+      artifact_version: ${{ needs.get-new-version.outputs.new_version }}
 
   publish-to-testpypi:
     name: Publish to TestPyPI

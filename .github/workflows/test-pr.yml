@@ -35,7 +35,7 @@ jobs:
           version=${latest_tag#v}
           IFS='.' read -r major minor patch <<< "$version"
           next_patch=$((patch + 1))
-          new_version="v${major}.${minor}.${next_patch}.rc${GITHUB_PR_NUMBER}${GITHUB_RUN_NUMBER}"
+          new_version="${major}.${minor}.${next_patch}.rc${GITHUB_PR_NUMBER}${GITHUB_RUN_NUMBER}"
           echo "new_version=$new_version" >> $GITHUB_OUTPUT
           echo "New version: $new_version"
 

@@ -53,7 +53,7 @@ jobs:
     uses: ./.github/workflows/_reusable-test-build.yml
     with:
       python_version: '3.11'
-      test_path: 'pypi_workflow_generator/'
+      test_path: '.'
       artifact_version: ${{ needs.calculate-version.outputs.new_version }}
 
   publish-to-pypi:
@@ -80,7 +80,7 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          verbose: true
+          verbose: false
 
       - name: Create and push tag
         run: |

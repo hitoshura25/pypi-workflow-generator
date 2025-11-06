@@ -15,7 +15,7 @@ except FileNotFoundError:
     long_description = ""
 
 setup(
-    name='pypi-workflow-generator',
+    name='vmenon25-pypi-workflow-generator',
     author='Vinayak Menon',
     author_email='vinayakmenon+pypi@users.noreply.github.com',
     description='Dual-mode tool (MCP server + CLI) for generating GitHub Actions workflows for Python package publishing',
@@ -46,13 +46,13 @@ setup(
     entry_points={
         'console_scripts': [
             # CLI mode (existing)
-            'pypi-workflow-generator=pypi_workflow_generator.main:main',
-            'pypi-workflow-generator-init=pypi_workflow_generator.init:main',
-            'pypi-release=pypi_workflow_generator.create_release:main',
-            'pypi-workflow-generator-release=pypi_workflow_generator.release_workflow:main',
+            'vmenon25-pypi-workflow-generator=vmenon25_pypi_workflow_generator.main:main',
+            'vmenon25-pypi-workflow-generator-init=vmenon25_pypi_workflow_generator.init:main',
+            'vmenon25-pypi-release=vmenon25_pypi_workflow_generator.create_release:main',
+            'vmenon25-pypi-workflow-generator-release=vmenon25_pypi_workflow_generator.release_workflow:main',
 
             # MCP mode (new)
-            'mcp-pypi-workflow-generator=pypi_workflow_generator.server:main',
+            'mcp-vmenon25-pypi-workflow-generator=vmenon25_pypi_workflow_generator.server:main',
         ],
     },
 )

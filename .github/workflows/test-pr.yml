@@ -36,7 +36,7 @@ jobs:
     needs: [get-new-version]
     with:
       python_version: '3.11'
-      test_path: 'pypi_workflow_generator/'
+      test_path: '.'
       artifact_version: ${{ needs.get-new-version.outputs.new_version }}
 
   publish-to-testpypi:
@@ -57,4 +57,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
-          verbose: true
+          verbose: false

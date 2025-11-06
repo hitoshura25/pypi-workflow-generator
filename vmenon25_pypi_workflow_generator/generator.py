@@ -119,22 +119,100 @@ def initialize_project(
     author_email: str,
     description: str,
     url: str,
-    command_name: str
+    command_name: str,
+    prefix: Optional[str] = "AUTO"
 ) -> Dict[str, Any]:
     """
     Initialize a new Python project with pyproject.toml and setup.py.
 
     Args:
-        package_name: Name of the Python package
+        package_name: Base package name (without prefix)
         author: Author name
         author_email: Author email
         description: Package description
         url: Project URL
         command_name: Command-line entry point name
+        prefix: Prefix to prepend to package name.
+                - "AUTO" (default): Auto-detect from git config
+                - Explicit string: Use provided prefix
+                - None: No prefix (skip)
 
     Returns:
         Dict with success status and created files
+
+    Examples:
+        # Auto-detect prefix from git
+        initialize_project(package_name="coolapp", ...)
+        # → "jsmith-coolapp" (if git user is jsmith)
+
+        # Explicit prefix
+        initialize_project(package_name="coolapp", prefix="myorg", ...)
+        # → "myorg-coolapp"
+
+        # No prefix
+        initialize_project(package_name="coolapp", prefix=None, ...)
+        # → "coolapp"
     """
+    from vmenon25_pypi_workflow_generator.git_utils import get_default_prefix
+    import sys
+
+    # Determine final prefix
+    detected_prefix = None
+    if prefix == "AUTO":
+        # Auto-detect from git
+        try:
+            detected_prefix = get_default_prefix()
+            final_package_name = f"{detected_prefix}-{package_name}"
+            print(f"INFO: Auto-detected prefix: '{detected_prefix}'", file=sys.stderr)
+            print(f"INFO: Full package name: '{final_package_name}'", file=sys.stderr)
+        except RuntimeError as e:
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    elif prefix is not None:
+        # Use provided prefix
+        detected_prefix = prefix
+        final_package_name = f"{prefix}-{package_name}"
+        print(f"INFO: Using prefix: '{prefix}'", file=sys.stderr)
+        print(f"INFO: Full package name: '{final_package_name}'", file=sys.stderr)
+    else:
+        # No prefix
+        final_package_name = package_name
+        print(f"INFO: No prefix (using package name as-is)", file=sys.stderr)
+
+    # Derive import name (replace hyphens with underscores)
+    import_name = final_package_name.replace('-', '_')
+
+    # Validate import name
+    if not import_name.isidentifier():
+        return {
+            'success': False,
+            'error': f"Invalid import name: {import_name}"
+        }
+
+    # Create package directory
+    if not os.path.exists(import_name):
+        os.makedirs(import_name)
+
+    # Create __init__.py in package directory
+    init_file = os.path.join(import_name, '__init__.py')
+    if not os.path.exists(init_file):
+        with open(init_file, 'w') as f:
+            f.write(f'"""{ final_package_name} package."""\n')
+            f.write('__version__ = "0.1.0"\n')
+
+    # Create main.py in package directory
+    main_file = os.path.join(import_name, 'main.py')
+    if not os.path.exists(main_file):
+        with open(main_file, 'w') as f:
+            f.write('"""Main module."""\n\n')
+            f.write('def main():\n')
+            f.write('    """Main entry point."""\n')
+            f.write('    print("Hello from {}!")\n'.format(final_package_name))
+            f.write('\n\nif __name__ == "__main__":\n')
+            f.write('    main()\n')
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     env = Environment(loader=FileSystemLoader(script_dir))
 
@@ -145,7 +223,8 @@ def initialize_project(
     # Render setup.py
     setup_template = env.get_template('setup.py.j2')
     setup_content = setup_template.render(
-        package_name=package_name,
+        package_name=final_package_name,
+        import_name=import_name,
         author=author,
         author_email=author_email,
         description=description,
@@ -160,10 +239,15 @@ def initialize_project(
     with open('setup.py', 'w') as f:
         f.write(setup_content)
 
+    files_created = ['pyproject.toml', 'setup.py', f'{import_name}/__init__.py', f'{import_name}/main.py']
+
     return {
         'success': True,
-        'files_created': ['pyproject.toml', 'setup.py'],
-        'message': 'Successfully initialized project with pyproject.toml and setup.py'
+        'files_created': files_created,
+        'package_name': final_package_name,
+        'import_name': import_name,
+        'prefix': detected_prefix if detected_prefix else prefix,
+        'message': f'Created package: {import_name}/ (publishes as {final_package_name})'
     }
 
 

@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pypi-workflow-generator"
+name = "vmenon25-pypi-workflow-generator"
 description = "Dual-mode tool (MCP server + CLI) for generating GitHub Actions workflows"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -39,19 +39,19 @@ Issues = "https://github.com/hitoshura25/pypi-workflow-generator/issues"
 Documentation = "https://github.com/hitoshura25/pypi-workflow-generator/blob/main/README.md"
 
 [project.scripts]
-pypi-workflow-generator = "pypi_workflow_generator.main:main"
-pypi-workflow-generator-init = "pypi_workflow_generator.init:main"
-pypi-release = "pypi_workflow_generator.create_release:main"
-mcp-pypi-workflow-generator = "pypi_workflow_generator.server:main"
+vmenon25-pypi-workflow-generator = "vmenon25_pypi_workflow_generator.main:main"
+vmenon25-pypi-workflow-generator-init = "vmenon25_pypi_workflow_generator.init:main"
+vmenon25-pypi-release = "vmenon25_pypi_workflow_generator.create_release:main"
+mcp-vmenon25-pypi-workflow-generator = "vmenon25_pypi_workflow_generator.server:main"
 
 [tool.setuptools_scm]
 version_scheme = "post-release"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["pypi_workflow_generator*"]
+include = ["vmenon25_pypi_workflow_generator*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
-pypi_workflow_generator = ["*.j2"]
+vmenon25_pypi_workflow_generator = ["*.j2"]
 

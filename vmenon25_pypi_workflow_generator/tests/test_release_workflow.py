@@ -3,7 +3,7 @@ Tests for release workflow generation.
 """
 import os
 from pathlib import Path
-from pypi_workflow_generator.generator import generate_workflows
+from vmenon25_pypi_workflow_generator.generator import generate_workflows
 
 
 def test_release_workflow_structure(tmp_path: Path):

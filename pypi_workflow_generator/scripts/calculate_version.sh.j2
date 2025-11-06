@@ -58,9 +58,9 @@ EXAMPLES:
   calculate_version.sh --type release --bump patch
   # Output: new_version=v1.2.4
 
-  # RC version for PR #123, run #45
+  # Development version for PR #123, run #45
   calculate_version.sh --type rc --bump patch --pr-number 123 --run-number 45
-  # Output: new_version=1.2.4rc12345
+  # Output: new_version=1.2.4.dev123045
 
 EXIT CODES:
   0  Success
@@ -152,10 +152,12 @@ if [[ "$VERSION_TYPE" == "release" ]]; then
   new_version="v${major}.${minor}.${patch}"
   echo -e "${GREEN}Generated release version: $new_version${NC}" >&2
 elif [[ "$VERSION_TYPE" == "rc" ]]; then
-  # RC version format: major.minor.patch + "rc" + PR# + RUN#
-  # Example: 1.2.3rc12345 (PR 123, run 45)
-  new_version="${major}.${minor}.${patch}rc${PR_NUMBER}${RUN_NUMBER}"
-  echo -e "${GREEN}Generated RC version: $new_version${NC}" >&2
+  # Development version format: major.minor.patch.dev + PR# + padded RUN#
+  # Pad run number to 3 digits to prevent ambiguity
+  # Example: 1.2.3.dev123045 (PR 123, run 45)
+  printf -v padded_run "%03d" "$RUN_NUMBER"
+  new_version="${major}.${minor}.${patch}.dev${PR_NUMBER}${padded_run}"
+  echo -e "${GREEN}Generated dev version: $new_version${NC}" >&2
 fi
 
 # Output for GitHub Actions

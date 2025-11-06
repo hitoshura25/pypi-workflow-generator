@@ -118,3 +118,67 @@ def test_generated_files_list_includes_script(tmp_path):
 
     finally:
         os.chdir(original_cwd)
+
+
+def test_script_uses_dev_format(tmp_path):
+    """Test that the script generates .dev versions instead of rc."""
+    from pypi_workflow_generator.generator import generate_workflows
+
+    import os
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+
+        # Create required files
+        (tmp_path / 'pyproject.toml').write_text('[build-system]')
+        (tmp_path / 'setup.py').write_text('# setup')
+
+        generate_workflows(
+            python_version='3.11',
+            test_path='tests/'
+        )
+
+        script_path = tmp_path / 'scripts' / 'calculate_version.sh'
+        content = script_path.read_text()
+
+        # Should use .dev instead of rc in version generation
+        assert '.dev' in content, "Script should generate .dev versions"
+        assert 'Generated dev version' in content, "Script should mention dev version in output"
+
+        # Should have padding logic
+        assert 'printf -v padded_run "%03d"' in content, "Script should pad run numbers to 3 digits"
+
+        # Help should show dev examples
+        assert '1.2.4.dev123045' in content, "Help should show .dev version example"
+
+    finally:
+        os.chdir(original_cwd)
+
+
+def test_script_help_shows_dev_format(tmp_path):
+    """Test that script help documentation shows development version format."""
+    from pypi_workflow_generator.generator import generate_workflows
+
+    import os
+    original_cwd = os.getcwd()
+    try:
+        os.chdir(tmp_path)
+
+        # Create required files
+        (tmp_path / 'pyproject.toml').write_text('[build-system]')
+        (tmp_path / 'setup.py').write_text('# setup')
+
+        generate_workflows(
+            python_version='3.11',
+            test_path='tests/'
+        )
+
+        script_path = tmp_path / 'scripts' / 'calculate_version.sh'
+        content = script_path.read_text()
+
+        # Check help examples show development versions
+        assert 'Development version for PR' in content, "Help should describe development versions"
+        assert '1.2.4.dev123045' in content, "Help should show .dev version example"
+
+    finally:
+        os.chdir(original_cwd)

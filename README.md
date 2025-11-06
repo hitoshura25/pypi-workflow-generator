@@ -11,7 +11,7 @@ A dual-mode tool (MCP server + CLI) for generating GitHub Actions workflows for 
 - ✅ **Automated Versioning**: Uses setuptools_scm for git-based versioning
 - ✅ **DRY Version Logic**: Shared script eliminates duplicate version calculation code
 - ✅ **setuptools_scm Compatible**: Proper version detection in reusable workflows via SETUPTOOLS_SCM_PRETEND_VERSION
-- ✅ **Pre-release Testing**: Automatic TestPyPI publishing on pull requests with RC versions
+- ✅ **Pre-release Testing**: Automatic TestPyPI publishing on pull requests with PEP 440 development versions
 - ✅ **Production Publishing**: Manual releases via GitHub Actions UI
 - ✅ **Complete Project Initialization**: Generates pyproject.toml and setup.py
 - ✅ **DRY Architecture**: Reusable workflows for shared logic
@@ -205,7 +205,10 @@ The generator creates a shared `scripts/calculate_version.sh` script that handle
 ### Version Formats
 
 - **Release versions:** `v1.2.3` (semantic versioning with 'v' prefix for git tags)
-- **RC versions:** `1.2.3rc12345` (no 'v' prefix, includes PR number and run number for TestPyPI)
+- **Development versions:** `1.2.3.dev123045` (PEP 440 dev releases for TestPyPI)
+  - Format: `{version}.dev{PR_NUMBER}{RUN_NUMBER_PADDED}`
+  - Example: PR #123, run #45 → `1.2.3.dev123045`
+  - Run number padded to 3 digits to prevent ambiguity
 
 ### Script Usage
 
@@ -220,9 +223,9 @@ The script can be run locally for testing or is automatically called by workflow
 ./scripts/calculate_version.sh --type release --bump minor
 # Output: new_version=v1.3.0
 
-# Calculate RC version for PR #123, run #45
+# Calculate development version for PR #123, run #45
 ./scripts/calculate_version.sh --type rc --bump patch --pr-number 123 --run-number 45
-# Output: new_version=1.2.4rc12345
+# Output: new_version=1.2.4.dev123045
 
 # Show help
 ./scripts/calculate_version.sh --help
@@ -238,7 +241,7 @@ The script can be run locally for testing or is automatically called by workflow
    - `patch`: 1.2.3 → 1.2.4 (bug fixes)
 4. **Formats output** based on `--type`:
    - `release`: Adds 'v' prefix for git tags → `v1.2.4`
-   - `rc`: No prefix, adds 'rc' + PR# + run# → `1.2.4rc12345`
+   - `rc`: No prefix, adds '.dev' + PR# + padded run# → `1.2.4.dev123045`
 5. **Outputs to GitHub Actions** via `$GITHUB_OUTPUT`
 
 ### setuptools_scm Integration
@@ -268,6 +271,43 @@ This approach works perfectly because:
 - ✅ Calculated version passes between jobs via artifacts/outputs
 - ✅ Build uses explicit version, no git detection needed
 - ✅ Works with PyPI Trusted Publishing (reusable workflows supported)
+
+### Why .dev Instead of rc?
+
+**Semantic Correctness:**
+- `.dev` versions = development/pre-alpha (perfect for PR testing)
+- `rc` versions = release candidates (implies near-final release ready for production)
+- PR testing is exploratory development work, not release preparation
+
+**PEP 440 Compliance:**
+- `.dev` versions are the Python standard for pre-release development work
+- Properly sort before official releases: `1.2.3.dev1 < 1.2.3.dev100 < 1.2.3`
+- Compatible with all Python packaging tools (pip, setuptools, etc.)
+
+**No Ambiguity:**
+- Old format: `1.2.3rc12345` - impossible to determine where PR# ends and run# begins
+- New format: `1.2.3.dev123045` - unambiguous (PR #123, run #45 padded to 3 digits)
+- Padding to 3 digits prevents collisions between different PRs
+
+**Examples:**
+```
+PR #5,    run #2   → 1.2.4.dev005002
+PR #123,  run #45  → 1.2.4.dev123045
+PR #1234, run #678 → 1.2.4.dev1234678
+```
+
+**Why Padding Matters:**
+```
+Without padding (old):
+  PR #123, run #4   → 1.2.3rc1234
+  PR #12,  run #34  → 1.2.3rc1234  ❌ COLLISION!
+  PR #1,   run #234 → 1.2.3rc1234  ❌ COLLISION!
+
+With padding (new):
+  PR #123, run #4   → 1.2.3.dev123004  ✓
+  PR #12,  run #34  → 1.2.3.dev012034  ✓
+  PR #1,   run #234 → 1.2.3.dev001234  ✓
+```
 
 ### Why a Shared Script?
 

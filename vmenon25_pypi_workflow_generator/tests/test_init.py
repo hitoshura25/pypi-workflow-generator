@@ -1,5 +1,4 @@
 import os
-import pytest
 from unittest.mock import patch
 from vmenon25_pypi_workflow_generator.generator import initialize_project
 

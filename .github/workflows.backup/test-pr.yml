@@ -8,7 +8,7 @@ jobs:
   get-new-version:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     outputs:
       new_version: ${{ steps.calc_version.outputs.new_version }}
 
@@ -19,17 +19,25 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - name: Make version script executable
-        run: chmod +x scripts/calculate_version.sh
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest_tag=$latest_tag" >> $GITHUB_OUTPUT
+          echo "Latest tag: $latest_tag"
 
-      - name: Calculate RC version
+      - name: Calculate new version
         id: calc_version
         run: |
-          ./scripts/calculate_version.sh \
-            --type rc \
-            --bump patch \
-            --pr-number "${{ github.event.pull_request.number }}" \
-            --run-number "${{ github.run_number }}"
+          latest_tag="${{ steps.get_latest_tag.outputs.latest_tag }}"
+          GITHUB_RUN_NUMBER="${{ github.run_number }}"
+          GITHUB_PR_NUMBER="${{ github.event.pull_request.number || '' }}"
+          version=${latest_tag#v}
+          IFS='.' read -r major minor patch <<< "$version"
+          next_patch=$((patch + 1))
+          new_version="${major}.${minor}.${next_patch}rc${GITHUB_PR_NUMBER}${GITHUB_RUN_NUMBER}"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+          echo "New version: $new_version"
 
   test-and-build:
     uses: ./.github/workflows/_reusable-test-build.yml

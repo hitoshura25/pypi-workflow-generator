@@ -14,7 +14,7 @@ on:
         type: string
         default: 'pypi_workflow_generator/'
       artifact_version:
-        description: 'Version for artifact'
+        description: 'Version to use for the artifact (overrides setuptools_scm detection)'
         required: false
         type: string
         default: ''
@@ -47,6 +47,7 @@ jobs:
 
       - name: Build package
         env:
+          # Override version detection if artifact_version is provided
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.artifact_version }}
         run: python -m build
 

@@ -87,12 +87,15 @@ def test_generate_workflows_includes_all_three_files(tmp_path: Path):
 
         assert result['success']
         assert 'files_created' in result
-        assert len(result['files_created']) == 3
+        assert len(result['files_created']) == 4  # 3 workflows + 1 script
 
         # All 3 workflows should exist
         assert (output_dir / '_reusable-test-build.yml').exists()
         assert (output_dir / 'release.yml').exists()
         assert (output_dir / 'test-pr.yml').exists()
+
+        # Script should exist
+        assert (tmp_path / 'scripts' / 'calculate_version.sh').exists()
 
     finally:
         os.chdir(original_cwd)

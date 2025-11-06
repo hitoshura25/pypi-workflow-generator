@@ -7,9 +7,11 @@ A dual-mode tool (MCP server + CLI) for generating GitHub Actions workflows for 
 - ✅ **Dual-Mode Operation**: Works as MCP server for AI agents OR traditional CLI for developers
 - ✅ **PyPI Trusted Publishers**: Secure publishing without API tokens
 - ✅ **No PAT Required**: Uses default GitHub token - zero additional setup
-- ✅ **Safe Tag Creation**: Tags only pushed after tests/build succeed
+- ✅ **Safe Tag Creation**: Tags only pushed AFTER successful PyPI publish (fail-safe design)
 - ✅ **Automated Versioning**: Uses setuptools_scm for git-based versioning
-- ✅ **Pre-release Testing**: Automatic TestPyPI publishing on pull requests
+- ✅ **DRY Version Logic**: Shared script eliminates duplicate version calculation code
+- ✅ **setuptools_scm Compatible**: Proper version detection in reusable workflows via SETUPTOOLS_SCM_PRETEND_VERSION
+- ✅ **Pre-release Testing**: Automatic TestPyPI publishing on pull requests with RC versions
 - ✅ **Production Publishing**: Manual releases via GitHub Actions UI
 - ✅ **Complete Project Initialization**: Generates pyproject.toml and setup.py
 - ✅ **DRY Architecture**: Reusable workflows for shared logic
@@ -58,6 +60,7 @@ Claude: I'll help you set up a complete PyPI publishing workflow.
   - .github/workflows/_reusable-test-build.yml
   - .github/workflows/release.yml
   - .github/workflows/test-pr.yml
+  - scripts/calculate_version.sh
 
 Next steps:
 1. Configure Trusted Publishers on PyPI and TestPyPI
@@ -82,10 +85,11 @@ pypi-workflow-generator-init \
 pypi-workflow-generator
 ```
 
-This creates 3 workflow files:
-- `_reusable-test-build.yml` - Shared test/build logic
-- `release.yml` - Manual releases via GitHub UI
-- `test-pr.yml` - PR testing to TestPyPI
+This creates 3 workflow files and 1 script:
+- `.github/workflows/_reusable-test-build.yml` - Shared test/build logic
+- `.github/workflows/release.yml` - Manual releases via GitHub UI
+- `.github/workflows/test-pr.yml` - PR testing to TestPyPI
+- `scripts/calculate_version.sh` - Shared version calculation logic
 
 **Create a release**:
 ```bash
@@ -119,9 +123,9 @@ generate_workflows(
 )
 ```
 
-## Generated Workflows
+## Generated Files
 
-This tool generates **THREE** GitHub Actions workflows:
+This tool generates **THREE** GitHub Actions workflows and **ONE** shared script:
 
 ### 1. Release Workflow (`release.yml`)
 
@@ -150,11 +154,22 @@ Automatically tests pull requests:
 
 Shared logic called by other workflows:
 
-- **Parameterized**: Accepts Python version, test path, and git ref
+- **Parameterized**: Accepts Python version, test path, and artifact_version
 - **Test Pipeline**: Checkout → setup → test → build
 - **Artifact Export**: Uploads built packages for use by caller workflows
+- **Version Override**: Uses `SETUPTOOLS_SCM_PRETEND_VERSION` when `artifact_version` is provided
 - **Reusable**: Single source of truth for test/build logic
 - **Note**: Does NOT publish (publishing done by caller workflows for PyPI Trusted Publishing compatibility)
+
+### 4. Version Calculation Script (`scripts/calculate_version.sh`)
+
+Shared version calculation logic used by all workflows:
+
+- **Release Versions**: Generates semantic versions with 'v' prefix (e.g., `v1.2.3`)
+- **RC Versions**: Generates pre-release versions for PRs (e.g., `1.2.3rc12345`)
+- **Parameterized**: Accepts version type, bump type, PR number, and run number
+- **Testable**: Can be run locally for testing version logic
+- **DRY**: Eliminates ~80 lines of duplicate code across workflows
 
 ## Creating Releases
 
@@ -171,15 +186,99 @@ Shared logic called by other workflows:
 
 The workflow will:
 1. ✅ Calculate the next version number
-2. ✅ Check if tag already exists
-3. ✅ Create tag locally (not pushed yet)
-4. ✅ Run tests
-5. ✅ Build package
-6. ✅ Publish to PyPI
-7. ✅ Push tag to repository (only if all above succeed)
-8. ✅ Create GitHub Release with auto-generated notes
+2. ✅ Check if tag already exists remotely
+3. ✅ Run tests with calculated version
+4. ✅ Build package with calculated version
+5. ✅ **Publish to PyPI** (critical operation first)
+6. ✅ Create and push tag to repository (only after successful publish)
+7. ✅ Create GitHub Release with auto-generated notes
 
-**Key Benefit**: Tags are only pushed if tests and build succeed, preventing orphaned tags for failed releases.
+**Key Benefit**: Tags are only created/pushed AFTER successful PyPI publish. This fail-safe design ensures:
+- If publish fails, no tag is created (easy retry with same version)
+- If tag push fails, package is already on PyPI (users can install), easy manual fix
+- No orphaned tags for failed releases
+
+## Version Calculation
+
+The generator creates a shared `scripts/calculate_version.sh` script that handles version calculation for both PR and release workflows, eliminating duplicate code and ensuring consistency.
+
+### Version Formats
+
+- **Release versions:** `v1.2.3` (semantic versioning with 'v' prefix for git tags)
+- **RC versions:** `1.2.3rc12345` (no 'v' prefix, includes PR number and run number for TestPyPI)
+
+### Script Usage
+
+The script can be run locally for testing or is automatically called by workflows:
+
+```bash
+# Calculate release version (patch bump)
+./scripts/calculate_version.sh --type release --bump patch
+# Output: new_version=v1.2.4
+
+# Calculate release version (minor bump)
+./scripts/calculate_version.sh --type release --bump minor
+# Output: new_version=v1.3.0
+
+# Calculate RC version for PR #123, run #45
+./scripts/calculate_version.sh --type rc --bump patch --pr-number 123 --run-number 45
+# Output: new_version=1.2.4rc12345
+
+# Show help
+./scripts/calculate_version.sh --help
+```
+
+### How It Works
+
+1. **Gets latest tag** from git history (defaults to v0.0.0 if none exist)
+2. **Parses version** components (major, minor, patch)
+3. **Applies bump** according to `--bump` parameter:
+   - `major`: 1.0.0 → 2.0.0 (breaking changes)
+   - `minor`: 1.2.0 → 1.3.0 (new features)
+   - `patch`: 1.2.3 → 1.2.4 (bug fixes)
+4. **Formats output** based on `--type`:
+   - `release`: Adds 'v' prefix for git tags → `v1.2.4`
+   - `rc`: No prefix, adds 'rc' + PR# + run# → `1.2.4rc12345`
+5. **Outputs to GitHub Actions** via `$GITHUB_OUTPUT`
+
+### setuptools_scm Integration
+
+The workflows use `SETUPTOOLS_SCM_PRETEND_VERSION` to ensure correct version detection:
+
+**The Challenge:**
+- Reusable workflows run in fresh GitHub Actions runners
+- Tags created in one job don't exist in other jobs/runners
+- setuptools_scm normally detects version from git tags
+- Without tags, version detection fails
+
+**The Solution:**
+1. **Calculate version** in dedicated job using `calculate_version.sh`
+2. **Pass version** to reusable workflow via `artifact_version` input parameter
+3. **Build with override** using `SETUPTOOLS_SCM_PRETEND_VERSION` environment variable:
+   ```yaml
+   - name: Build package
+     env:
+       SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.artifact_version }}
+     run: python -m build
+   ```
+4. **setuptools_scm respects** the override and uses provided version instead of git detection
+
+This approach works perfectly because:
+- ✅ Version calculation happens once in a job with git history
+- ✅ Calculated version passes between jobs via artifacts/outputs
+- ✅ Build uses explicit version, no git detection needed
+- ✅ Works with PyPI Trusted Publishing (reusable workflows supported)
+
+### Why a Shared Script?
+
+Before using a shared script, version calculation logic was duplicated between `test-pr.yml` and `release.yml` (~80 lines of duplicate bash code). The shared script provides:
+
+- ✅ **Single source of truth** for all version logic
+- ✅ **Easier to maintain** - changes in one place affect all workflows
+- ✅ **Testable** - can run locally without GitHub Actions
+- ✅ **Consistent** - same logic guarantees same results
+- ✅ **Extensible** - easy to add new version formats or validation rules
+- ✅ **Self-documenting** - includes `--help` flag with usage examples
 
 ## Setting Up Trusted Publishers
 

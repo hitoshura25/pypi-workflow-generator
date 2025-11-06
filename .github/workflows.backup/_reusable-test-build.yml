@@ -7,14 +7,14 @@ on:
         description: 'Python version to use'
         required: false
         type: string
-        default: '{{ python_version }}'
+        default: '3.11'
       test_path:
         description: 'Path to tests'
         required: false
         type: string
-        default: '{{ test_path }}'
+        default: 'pypi_workflow_generator/'
       artifact_version:
-        description: 'Version to use for the artifact (overrides setuptools_scm detection)'
+        description: 'Version for artifact'
         required: false
         type: string
         default: ''
@@ -32,10 +32,10 @@ jobs:
           fetch-depth: 0  # For setuptools_scm
           fetch-tags: true
 
-      - name: Set up Python {% raw %}${{ inputs.python_version }}{% endraw %}
+      - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
-          python-version: {% raw %}${{ inputs.python_version }}{% endraw %}
+          python-version: ${{ inputs.python_version }}
 
       - name: Install dependencies
         run: |
@@ -43,12 +43,11 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests with pytest
-        run: python -m pytest {% raw %}${{ inputs.test_path }}{% endraw %}
+        run: python -m pytest ${{ inputs.test_path }}
 
       - name: Build package
         env:
-          # Override version detection if artifact_version is provided
-          SETUPTOOLS_SCM_PRETEND_VERSION: {% raw %}${{ inputs.artifact_version }}{% endraw %}
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ inputs.artifact_version }}
         run: python -m build
 
       - name: Store the distribution packages

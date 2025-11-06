@@ -52,11 +52,14 @@ def generate_workflows(
     # Set up Jinja2 environment
     env = Environment(loader=FileSystemLoader(script_dir))
 
-    # Construct output directory
+    # Construct output directories
     output_dir = base_output_dir if base_output_dir else os.path.join(
         os.getcwd(), '.github', 'workflows'
     )
+    scripts_dir = os.path.join(os.getcwd(), 'scripts')
+
     os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(scripts_dir, exist_ok=True)
 
     files_created = []
 
@@ -84,10 +87,28 @@ def generate_workflows(
 
         files_created.append(full_output_path)
 
+    # Generate script files
+    script_templates = [
+        ('scripts/calculate_version.sh.j2', 'calculate_version.sh')
+    ]
+
+    for template_name, output_filename in script_templates:
+        template = env.get_template(template_name)
+        content = template.render(**context)
+
+        full_output_path = os.path.join(scripts_dir, output_filename)
+        with open(full_output_path, 'w') as f:
+            f.write(content)
+
+        # Make script executable
+        os.chmod(full_output_path, 0o755)
+
+        files_created.append(full_output_path)
+
     return {
         'success': True,
         'files_created': files_created,
-        'message': f"Successfully generated {len(files_created)} workflow files:\n" +
+        'message': f"Successfully generated {len(files_created)} files:\n" +
                    "\n".join(f"  - {f}" for f in files_created)
     }
 

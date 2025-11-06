@@ -22,9 +22,9 @@ def test_generate_workflows_default_arguments(tmp_path):
         assert result['success']
         assert 'files_created' in result
         assert 'message' in result
-        assert len(result['files_created']) == 3
+        assert len(result['files_created']) == 4  # 3 workflows + 1 script
 
-        # Verify all 3 files exist
+        # Verify all 3 workflow files exist
         reusable_file = output_dir / '_reusable-test-build.yml'
         release_file = output_dir / 'release.yml'
         test_pr_file = output_dir / 'test-pr.yml'
@@ -32,6 +32,11 @@ def test_generate_workflows_default_arguments(tmp_path):
         assert reusable_file.exists()
         assert release_file.exists()
         assert test_pr_file.exists()
+
+        # Verify script file exists and is executable
+        script_file = tmp_path / 'scripts' / 'calculate_version.sh'
+        assert script_file.exists()
+        assert script_file.stat().st_mode & 0o111  # Check executable bit
 
         # Check reusable workflow content
         with open(reusable_file, 'r') as f:
@@ -65,9 +70,9 @@ def test_generate_workflows_custom_arguments(tmp_path):
         assert result['success']
         assert 'files_created' in result
         assert 'message' in result
-        assert len(result['files_created']) == 3
+        assert len(result['files_created']) == 4  # 3 workflows + 1 script
 
-        # Verify all 3 files exist
+        # Verify all 3 workflow files exist
         reusable_file = output_dir / '_reusable-test-build.yml'
         release_file = output_dir / 'release.yml'
         test_pr_file = output_dir / 'test-pr.yml'
@@ -75,6 +80,11 @@ def test_generate_workflows_custom_arguments(tmp_path):
         assert reusable_file.exists()
         assert release_file.exists()
         assert test_pr_file.exists()
+
+        # Verify script file exists and is executable
+        script_file = tmp_path / 'scripts' / 'calculate_version.sh'
+        assert script_file.exists()
+        assert script_file.stat().st_mode & 0o111  # Check executable bit
 
         # Check custom Python version in reusable workflow
         with open(reusable_file, 'r') as f:

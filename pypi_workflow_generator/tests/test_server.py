@@ -84,7 +84,7 @@ async def test_call_tool_generate_workflows(tmp_path):
         assert "Successfully generated" in result["content"][0]["text"]
         assert result.get("isError") == False
 
-        # Verify all 3 files were created
+        # Verify all 3 workflow files were created
         reusable_path = tmp_path / ".github" / "workflows" / "_reusable-test-build.yml"
         release_path = tmp_path / ".github" / "workflows" / "release.yml"
         test_pr_path = tmp_path / ".github" / "workflows" / "test-pr.yml"
@@ -92,6 +92,12 @@ async def test_call_tool_generate_workflows(tmp_path):
         assert reusable_path.exists()
         assert release_path.exists()
         assert test_pr_path.exists()
+
+        # Verify script file was created and is executable
+        script_path = tmp_path / "scripts" / "calculate_version.sh"
+        assert script_path.exists()
+        assert script_path.is_file()
+        assert script_path.stat().st_mode & 0o111  # Check executable bit
 
         # Verify content has correct Python version
         content = reusable_path.read_text()

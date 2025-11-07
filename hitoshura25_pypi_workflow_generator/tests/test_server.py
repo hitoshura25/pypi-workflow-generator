@@ -4,7 +4,7 @@ Tests for MCP server functionality.
 
 import os
 import pytest
-from pypi_workflow_generator.server import MCPServer
+from hitoshura25_pypi_workflow_generator.server import MCPServer
 
 @pytest.mark.asyncio
 async def test_list_tools():
@@ -169,17 +169,22 @@ async def test_call_tool_initialize_project(tmp_path):
                 "author_email": "test@example.com",
                 "description": "A test package",
                 "url": "https://github.com/test/test-package",
-                "command_name": "test-cmd"
+                "command_name": "test-cmd",
+                "prefix": "NONE"  # Skip prefix for this test
             }
         )
 
         assert "content" in result
         assert result.get("isError") == False
-        assert "Successfully initialized project" in result["content"][0]["text"]
+        # New message format
+        assert "Created package:" in result["content"][0]["text"]
+        assert "test_package" in result["content"][0]["text"]  # import name
+        assert "test-package" in result["content"][0]["text"]  # package name
 
         # Verify files were created
         assert (tmp_path / "pyproject.toml").exists()
         assert (tmp_path / "setup.py").exists()
+        assert (tmp_path / "test_package").exists()  # package directory
 
         # Verify content
         setup_content = (tmp_path / "setup.py").read_text()
@@ -300,7 +305,7 @@ async def test_handle_request_unknown_method():
 
 def test_mcp_server_imports():
     """Test that MCP server can be imported successfully."""
-    from pypi_workflow_generator.server import MCPServer, main
+    from hitoshura25_pypi_workflow_generator.server import MCPServer, main
 
     assert MCPServer is not None
     assert main is not None

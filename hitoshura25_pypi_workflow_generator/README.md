@@ -1,4 +1,4 @@
-# `pypi_workflow_generator` Package
+# `hitoshura25_pypi_workflow_generator` Package
 
 Core logic for generating GitHub Actions workflows for Python packages.
 
@@ -134,7 +134,7 @@ Jinja2 template for pyproject.toml.
 ### As Library
 
 ```python
-from pypi_workflow_generator import generate_workflow, initialize_project, create_git_release
+from hitoshura25_pypi_workflow_generator import generate_workflow, initialize_project, create_git_release
 
 # Initialize project
 result = initialize_project(

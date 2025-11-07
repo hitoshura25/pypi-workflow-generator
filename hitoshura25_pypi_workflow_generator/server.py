@@ -56,13 +56,13 @@ class MCPServer:
                 },
                 {
                     "name": "initialize_project",
-                    "description": "Initialize a new Python project with pyproject.toml and setup.py configured for PyPI publishing",
+                    "description": "Initialize a new Python project with pyproject.toml and setup.py configured for PyPI publishing. By default, auto-detects git username as prefix to avoid PyPI naming conflicts.",
                     "inputSchema": {
                         "type": "object",
                         "properties": {
                             "package_name": {
                                 "type": "string",
-                                "description": "Name of the Python package"
+                                "description": "Base package name (without prefix)"
                             },
                             "author": {
                                 "type": "string",
@@ -83,6 +83,11 @@ class MCPServer:
                             "command_name": {
                                 "type": "string",
                                 "description": "Command-line entry point name"
+                            },
+                            "prefix": {
+                                "type": "string",
+                                "description": "Package name prefix. Use 'AUTO' to auto-detect from git (default), explicit string for custom prefix, or 'NONE' to skip prefix.",
+                                "default": "AUTO"
                             }
                         },
                         "required": ["package_name", "author", "author_email", "description", "url", "command_name"]
@@ -121,12 +126,23 @@ class MCPServer:
                 }
 
             elif tool_name == "initialize_project":
+                # Handle prefix parameter - convert "NONE" string to None
+                if 'prefix' in arguments:
+                    if arguments['prefix'] == 'NONE':
+                        arguments['prefix'] = None
+                    elif arguments['prefix'] == '':
+                        # Default to AUTO if not specified
+                        arguments['prefix'] = 'AUTO'
+                else:
+                    # Default to AUTO
+                    arguments['prefix'] = 'AUTO'
+
                 result = initialize_project(**arguments)
                 return {
                     "content": [
                         {
                             "type": "text",
-                            "text": result['message']
+                            "text": result.get('message', result.get('error', 'Unknown error'))
                         }
                     ],
                     "isError": not result['success']

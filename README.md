@@ -477,7 +477,7 @@ The MCP server runs via stdio transport and provides three tools:
 - Creates and pushes git tag
 - Parameters: version
 
-See [MCP-USAGE.md](https://github.com/hitoshura25/mcp-server-generator/blob/main/MCP-USAGE.md) for detailed MCP configuration and usage.
+See [MCP-USAGE.md](https://github.com/hitoshura25/pypi-workflow-generator/blob/main/MCP-USAGE.md) for detailed MCP configuration and usage.
 
 ## Interface Differences
 

@@ -4,7 +4,7 @@ Tests for MCP server functionality.
 
 import os
 import pytest
-from vmenon25_pypi_workflow_generator.server import MCPServer
+from hitoshura25_pypi_workflow_generator.server import MCPServer
 
 @pytest.mark.asyncio
 async def test_list_tools():
@@ -305,7 +305,7 @@ async def test_handle_request_unknown_method():
 
 def test_mcp_server_imports():
     """Test that MCP server can be imported successfully."""
-    from vmenon25_pypi_workflow_generator.server import MCPServer, main
+    from hitoshura25_pypi_workflow_generator.server import MCPServer, main
 
     assert MCPServer is not None
     assert main is not None

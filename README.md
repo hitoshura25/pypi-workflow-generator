@@ -1,4 +1,4 @@
-# vmenon25-pypi-workflow-generator
+# hitoshura25-pypi-workflow-generator
 
 A dual-mode tool (MCP server + CLI) for generating GitHub Actions workflows for Python package publishing to PyPI.
 
@@ -19,7 +19,7 @@ A dual-mode tool (MCP server + CLI) for generating GitHub Actions workflows for 
 ## Installation
 
 ```bash
-pip install vmenon25-pypi-workflow-generator
+pip install hitoshura25-pypi-workflow-generator
 ```
 
 ## Package Naming Best Practices
@@ -31,7 +31,7 @@ By default, the generator adds your git username as a prefix to avoid PyPI namin
 **Example:**
 ```bash
 # Your git config shows: github.com/jsmith/my-repo
-$ vmenon25-pypi-workflow-generator-init --package-name coolapp ...
+$ hitoshura25-pypi-workflow-generator-init --package-name coolapp ...
 
 # Auto-detects and creates:
 # - PyPI Package: jsmith-coolapp
@@ -47,19 +47,19 @@ $ vmenon25-pypi-workflow-generator-init --package-name coolapp ...
 
 **Auto-detect (default)** - For personal projects:
 ```bash
-vmenon25-pypi-workflow-generator-init --package-name coolapp ...
+hitoshura25-pypi-workflow-generator-init --package-name coolapp ...
 # Creates: your-username-coolapp
 ```
 
 **Custom Prefix** - For organization packages:
 ```bash
-vmenon25-pypi-workflow-generator-init --package-name coolapp --prefix acme ...
+hitoshura25-pypi-workflow-generator-init --package-name coolapp --prefix acme ...
 # Creates: acme-coolapp
 ```
 
 **No Prefix** - For unique standalone tools:
 ```bash
-vmenon25-pypi-workflow-generator-init --package-name unique-name --no-prefix ...
+hitoshura25-pypi-workflow-generator-init --package-name unique-name --no-prefix ...
 # Creates: unique-name (check PyPI availability first!)
 ```
 
@@ -93,8 +93,8 @@ For AI agents with MCP support (Claude Code, Continue.dev, Cline):
 ```json
 {
   "mcpServers": {
-    "vmenon25-pypi-workflow-generator": {
-      "command": "mcp-vmenon25-pypi-workflow-generator"
+    "hitoshura25-pypi-workflow-generator": {
+      "command": "mcp-hitoshura25-pypi-workflow-generator"
     }
   }
 }
@@ -130,7 +130,7 @@ Next steps:
 
 **Initialize a new project**:
 ```bash
-vmenon25-pypi-workflow-generator-init \
+hitoshura25-pypi-workflow-generator-init \
   --package-name my-awesome-package \
   --author "Your Name" \
   --author-email "your.email@example.com" \
@@ -141,7 +141,7 @@ vmenon25-pypi-workflow-generator-init \
 
 **Generate workflows**:
 ```bash
-vmenon25-pypi-workflow-generator
+hitoshura25-pypi-workflow-generator
 ```
 
 This creates 3 workflow files and 1 script:
@@ -427,13 +427,13 @@ With Trusted Publishers configured, you're ready to go. The workflows use GitHub
 
 ## CLI Options
 
-### `vmenon25-pypi-workflow-generator`
+### `hitoshura25-pypi-workflow-generator`
 
 Generate all 3 GitHub Actions workflows for PyPI publishing.
 
 ```
 Usage:
-  vmenon25-pypi-workflow-generator [options]
+  hitoshura25-pypi-workflow-generator [options]
 
 Options:
   --python-version VERSION    Python version (default: 3.11)
@@ -446,7 +446,7 @@ Generates:
   .github/workflows/test-pr.yml
 ```
 
-### `vmenon25-pypi-workflow-generator-init`
+### `hitoshura25-pypi-workflow-generator-init`
 
 Initialize a new Python project with PyPI configuration.
 
@@ -512,13 +512,13 @@ pypi-release major      # Creates v2.0.0
 ### Entry Point Naming Convention
 
 The MCP server uses the `mcp-` prefix (industry standard for MCP tools):
-- `mcp-vmenon25-pypi-workflow-generator` - Follows MCP ecosystem naming
+- `mcp-hitoshura25-pypi-workflow-generator` - Follows MCP ecosystem naming
 - Makes it discoverable when searching for MCP servers
 - Clearly distinguishes server mode from CLI mode
 
 All other commands use the package prefix for CLI operations:
-- `vmenon25-pypi-workflow-generator`
-- `vmenon25-pypi-workflow-generator-init`
+- `hitoshura25-pypi-workflow-generator`
+- `hitoshura25-pypi-workflow-generator-init`
 - `vmenon25-pypi-release`
 
 ## Architecture
@@ -548,9 +548,9 @@ This project uses itself to generate its own GitHub Actions workflows! The workf
 Were all created by running:
 
 ```bash
-vmenon25-pypi-workflow-generator \
+hitoshura25-pypi-workflow-generator \
   --python-version 3.11 \
-  --test-path vmenon25_pypi_workflow_generator/ \
+  --test-path hitoshura25_pypi_workflow_generator/ \
   --verbose-publish
 ```
 
@@ -592,4 +592,4 @@ Apache-2.0
 
 - **Repository**: https://github.com/hitoshura25/pypi-workflow-generator
 - **Issues**: https://github.com/hitoshura25/pypi-workflow-generator/issues
-- **PyPI**: https://pypi.org/project/vmenon25-pypi-workflow-generator/
+- **PyPI**: https://pypi.org/project/hitoshura25-pypi-workflow-generator/

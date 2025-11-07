@@ -1,6 +1,6 @@
 import os
 from unittest.mock import patch
-from vmenon25_pypi_workflow_generator.generator import initialize_project
+from hitoshura25_pypi_workflow_generator.generator import initialize_project
 
 def test_init_project(tmp_path):
     """Test project initialization without prefix."""
@@ -55,7 +55,7 @@ def test_init_project(tmp_path):
         os.chdir(original_cwd)
 
 
-@patch('vmenon25_pypi_workflow_generator.git_utils.get_git_username')
+@patch('hitoshura25_pypi_workflow_generator.git_utils.get_git_username')
 def test_init_with_auto_prefix(mock_git, tmp_path):
     """Test initialization with auto-detected prefix."""
     mock_git.return_value = "jsmith"
@@ -159,7 +159,7 @@ def test_init_with_no_prefix(tmp_path):
         os.chdir(original_cwd)
 
 
-@patch('vmenon25_pypi_workflow_generator.git_utils.get_git_username')
+@patch('hitoshura25_pypi_workflow_generator.git_utils.get_git_username')
 def test_init_auto_prefix_fails_when_git_not_configured(mock_git, tmp_path):
     """Test that AUTO prefix fails gracefully when git not configured."""
     mock_git.return_value = None

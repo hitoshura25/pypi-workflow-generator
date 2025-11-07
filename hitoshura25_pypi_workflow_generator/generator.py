@@ -153,7 +153,7 @@ def initialize_project(
         initialize_project(package_name="coolapp", prefix=None, ...)
         # → "coolapp"
     """
-    from vmenon25_pypi_workflow_generator.git_utils import get_default_prefix
+    from hitoshura25_pypi_workflow_generator.git_utils import get_default_prefix
     import sys
 
     # Determine final prefix

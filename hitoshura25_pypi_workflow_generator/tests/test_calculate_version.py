@@ -6,7 +6,7 @@ import pytest
 
 def test_script_exists_after_generation(tmp_path):
     """Test that the script is generated and executable."""
-    from vmenon25_pypi_workflow_generator.generator import generate_workflows
+    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
     # Change to temp directory
     import os
@@ -35,7 +35,7 @@ def test_script_exists_after_generation(tmp_path):
 
 def test_script_contains_correct_shebang(tmp_path):
     """Test that generated script has proper shebang."""
-    from vmenon25_pypi_workflow_generator.generator import generate_workflows
+    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
     import os
     original_cwd = os.getcwd()
@@ -65,7 +65,7 @@ def test_script_contains_correct_shebang(tmp_path):
 
 def test_script_directory_created(tmp_path):
     """Test that scripts directory is created."""
-    from vmenon25_pypi_workflow_generator.generator import generate_workflows
+    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
     import os
     original_cwd = os.getcwd()
@@ -93,7 +93,7 @@ def test_script_directory_created(tmp_path):
 
 def test_generated_files_list_includes_script(tmp_path):
     """Test that the generated files list includes the script."""
-    from vmenon25_pypi_workflow_generator.generator import generate_workflows
+    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
     import os
     original_cwd = os.getcwd()
@@ -122,7 +122,7 @@ def test_generated_files_list_includes_script(tmp_path):
 
 def test_script_uses_dev_format(tmp_path):
     """Test that the script generates .dev versions instead of rc."""
-    from vmenon25_pypi_workflow_generator.generator import generate_workflows
+    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
     import os
     original_cwd = os.getcwd()
@@ -157,7 +157,7 @@ def test_script_uses_dev_format(tmp_path):
 
 def test_script_help_shows_dev_format(tmp_path):
     """Test that script help documentation shows development version format."""
-    from vmenon25_pypi_workflow_generator.generator import generate_workflows
+    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
     import os
     original_cwd = os.getcwd()

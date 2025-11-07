@@ -1,5 +1,5 @@
 import os
-from vmenon25_pypi_workflow_generator.generator import generate_workflows
+from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
 def test_generate_workflows_default_arguments(tmp_path):
     """Test workflow generation with default arguments."""

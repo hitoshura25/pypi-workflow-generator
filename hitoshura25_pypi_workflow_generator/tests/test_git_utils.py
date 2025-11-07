@@ -1,7 +1,7 @@
 """Tests for git utility functions."""
 import pytest
 from unittest.mock import patch, MagicMock
-from vmenon25_pypi_workflow_generator.git_utils import (
+from hitoshura25_pypi_workflow_generator.git_utils import (
     get_git_username,
     sanitize_prefix,
     get_default_prefix

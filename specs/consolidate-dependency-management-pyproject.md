@@ -53,7 +53,7 @@ No new files will be created. The primary goal is to eliminate `requirements.txt
 
 4.  **Update Project Configuration:**
     *   Edit `MANIFEST.in` and remove the line `include requirements.txt`.
-    *   If `setup.py` reads `requirements.txt`, remove that logic. Based on the project structure, this is unlikely as `pyproject.toml` and `setuptools-scm` are used, but it should be verified.
+    *   If `setup.py` reads `requirements.txt`, remove that logic. Based on the project structure, this is unlikely as `pyproject.toml` and `setuptools_scm` are used, but it should be verified.
 
 5.  **Update Documentation:**
     *   Review `README.md` and any other documentation files.

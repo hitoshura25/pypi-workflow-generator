@@ -30,6 +30,19 @@ dynamic = ["version"]
 
 dependencies = [
     "Jinja2>=3.0",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-asyncio",
+]
+dev = [
+    "twine",
+    "wheel",
+    "setuptools_scm",
+    "build",
 ]
 
 [project.urls]

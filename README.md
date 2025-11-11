@@ -571,7 +571,7 @@ git clone https://github.com/hitoshura25/pypi-workflow-generator.git
 cd pypi-workflow-generator
 
 # Install dependencies
-pip install -r requirements.txt
+pip install .[test]
 
 # Run tests
 pytest

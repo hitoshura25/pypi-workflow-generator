@@ -1,8 +1,0 @@
-pytest
-pytest-asyncio
-Jinja2
-pyyaml
-twine
-wheel
-setuptools_scm
-build

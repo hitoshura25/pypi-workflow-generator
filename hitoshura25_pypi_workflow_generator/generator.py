@@ -7,10 +7,13 @@ This module contains the shared business logic used by both:
 """
 
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from jinja2 import Environment, FileSystemLoader
+
+from hitoshura25_pypi_workflow_generator.git_utils import get_default_prefix
 
 
 def generate_workflows(
@@ -44,9 +47,8 @@ def generate_workflows(
     """
     # Validation
     if not Path("pyproject.toml").exists() or not Path("setup.py").exists():
-        raise FileNotFoundError(
-            "Project not initialized. Run 'pypi-workflow-generator-init' first."
-        )
+        msg = "Project not initialized. Run 'pypi-workflow-generator-init' first."
+        raise FileNotFoundError(msg)
 
     # Get template directory
     script_dir = Path(__file__).resolve().parent
@@ -113,7 +115,7 @@ def generate_workflows(
     }
 
 
-def initialize_project(
+def initialize_project(  # noqa: PLR0913
     package_name: str,
     author: str,
     author_email: str,
@@ -153,10 +155,6 @@ def initialize_project(
         initialize_project(package_name="coolapp", prefix=None, ...)
         # → "coolapp"
     """
-    import sys
-
-    from hitoshura25_pypi_workflow_generator.git_utils import get_default_prefix
-
     # Determine final prefix
     detected_prefix = None
     if prefix == "AUTO":
@@ -246,7 +244,9 @@ def initialize_project(
         "package_name": final_package_name,
         "import_name": import_name,
         "prefix": detected_prefix if detected_prefix else prefix,
-        "message": f"Created package: {import_name}/ (publishes as {final_package_name})",
+        "message": (
+            f"Created package: {import_name}/ (publishes as {final_package_name})"
+        ),
     }
 
 
@@ -283,10 +283,11 @@ def create_git_release(version: str) -> Dict[str, Any]:
             "message": f"Successfully created and pushed tag {version}",
         }
     except subprocess.CalledProcessError as e:
+        error_detail = e.stderr if e.stderr else str(e)
         return {
             "success": False,
             "error": str(e),
-            "message": f"Error creating or pushing tag: {e.stderr if e.stderr else str(e)}",
+            "message": f"Error creating or pushing tag: {error_detail}",
         }
     except FileNotFoundError:
         return {

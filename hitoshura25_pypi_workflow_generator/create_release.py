@@ -4,6 +4,7 @@ CLI for creating git release tags.
 """
 
 import argparse
+import contextlib
 import subprocess
 import sys
 
@@ -35,11 +36,9 @@ def create_release_tag_with_overwrite(version, overwrite=False):
             print(f"Tag {version} already exists. Overwriting.")
             try:
                 subprocess.run(["git", "tag", "-d", version], check=True)
-                try:
+                # Try to delete remote tag, but it's fine if it doesn't exist
+                with contextlib.suppress(subprocess.CalledProcessError):
                     subprocess.run(["git", "push", "origin", ":" + version], check=True)
-                except subprocess.CalledProcessError:
-                    # The remote tag does not exist, which is fine
-                    pass
             except subprocess.CalledProcessError as e:
                 print(f"Error deleting tag: {e}", file=sys.stderr)
                 return 1

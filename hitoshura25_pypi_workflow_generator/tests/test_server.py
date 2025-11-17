@@ -87,7 +87,7 @@ async def test_call_tool_generate_workflows(tmp_path):
         assert len(result["content"]) > 0
         assert result["content"][0]["type"] == "text"
         assert "Successfully generated" in result["content"][0]["text"]
-        assert result.get("isError") == False
+        assert not result.get("isError")
 
         # Verify all 3 workflow files were created
         reusable_path = tmp_path / ".github" / "workflows" / "_reusable-test-build.yml"
@@ -135,7 +135,7 @@ async def test_call_tool_generate_workflows_with_options(tmp_path):
             {"python_version": "3.10", "test_path": "tests/", "verbose_publish": True},
         )
 
-        assert result.get("isError") == False
+        assert not result.get("isError")
         assert "Successfully generated" in result["content"][0]["text"]
 
         # Verify all 3 files were created
@@ -186,7 +186,7 @@ async def test_call_tool_initialize_project(tmp_path):
         )
 
         assert "content" in result
-        assert result.get("isError") == False
+        assert not result.get("isError")
         # New message format
         assert "Created package:" in result["content"][0]["text"]
         assert "test_package" in result["content"][0]["text"]  # import name
@@ -222,7 +222,7 @@ async def test_call_tool_initialize_project_missing_args():
     )
 
     # Should return an error
-    assert result.get("isError") == True
+    assert result.get("isError")
     assert "content" in result
 
 
@@ -246,7 +246,7 @@ async def test_call_tool_unknown():
 
     result = await server.handle_call_tool("unknown_tool", {})
 
-    assert result.get("isError") == True
+    assert result.get("isError")
     assert "Unknown tool" in result["content"][0]["text"]
 
 
@@ -323,7 +323,7 @@ async def test_generate_workflows_creates_all_files_via_mcp(tmp_path):
             "generate_workflows", {"python_version": "3.11"}
         )
 
-        assert result.get("isError") == False
+        assert not result.get("isError")
 
         # All 3 workflows should exist
         assert (

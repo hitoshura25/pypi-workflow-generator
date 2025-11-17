@@ -64,7 +64,7 @@ def test_get_git_username_github_user(mock_run):
 def test_get_git_username_from_remote_url_ssh(mock_run):
     """Test extracting username from SSH remote URL."""
 
-    def side_effect(*args, **kwargs):
+    def side_effect(*args, **_kwargs):
         cmd = args[0]
         if "github.user" in cmd:
             return MagicMock(returncode=1, stdout="")
@@ -85,7 +85,7 @@ def test_get_git_username_from_remote_url_ssh(mock_run):
 def test_get_git_username_from_remote_url_https(mock_run):
     """Test extracting username from HTTPS remote URL."""
 
-    def side_effect(*args, **kwargs):
+    def side_effect(*args, **_kwargs):
         cmd = args[0]
         if "github.user" in cmd:
             return MagicMock(returncode=1, stdout="")
@@ -105,7 +105,7 @@ def test_get_git_username_from_remote_url_https(mock_run):
 def test_get_git_username_fallback_to_user_name(mock_run):
     """Test fallback to user.name when github.user and remote not set."""
 
-    def side_effect(*args, **kwargs):
+    def side_effect(*args, **_kwargs):
         cmd = args[0]
         if "github.user" in cmd or ("remote" in cmd and "get-url" in cmd):
             return MagicMock(returncode=1, stdout="")

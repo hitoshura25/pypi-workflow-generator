@@ -4,7 +4,7 @@ from pathlib import Path
 from setuptools import find_packages, setup
 
 
-def local_scheme(version):
+def local_scheme(_version):
     if os.environ.get("IS_PULL_REQUEST"):
         return f".dev{os.environ['GITHUB_RUN_ID']}"
     return ""
@@ -19,7 +19,10 @@ setup(
     name="hitoshura25-pypi-workflow-generator",
     author="Vinayak Menon",
     author_email="vinayakmenon+pypi@users.noreply.github.com",
-    description="Dual-mode tool (MCP server + CLI) for generating GitHub Actions workflows for Python package publishing",
+    description=(
+        "Dual-mode tool (MCP server + CLI) for generating GitHub Actions "
+        "workflows for Python package publishing"
+    ),
     url="https://github.com/hitoshura25/pypi-workflow-generator",
     use_scm_version={"local_scheme": local_scheme},
     long_description=long_description,

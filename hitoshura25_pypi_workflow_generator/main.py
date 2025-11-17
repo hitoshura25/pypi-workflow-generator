@@ -67,7 +67,8 @@ This creates:
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
         print(
-            "\nHint: Run 'pypi-workflow-generator-init' to initialize your project first.",
+            "\nHint: Run 'pypi-workflow-generator-init' to initialize "
+            "your project first.",
             file=sys.stderr,
         )
         return 1

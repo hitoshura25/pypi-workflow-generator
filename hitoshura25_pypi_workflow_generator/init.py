@@ -16,8 +16,9 @@ def main():
         epilog="""
 Examples:
   # Auto-detect prefix from git (default)
-  %(prog)s --package-name coolapp --author "Your Name" --author-email "you@example.com" \\
-    --description "Cool app" --url "https://github.com/user/coolapp" --command-name coolapp
+  %(prog)s --package-name coolapp --author "Your Name" \\
+    --author-email "you@example.com" --description "Cool app" \\
+    --url "https://github.com/user/coolapp" --command-name coolapp
 
   # Use custom prefix
   %(prog)s --package-name coolapp --prefix myorg --author "..." --author-email "..." \\
@@ -53,10 +54,7 @@ Examples:
     args = parser.parse_args()
 
     # Handle --no-prefix flag
-    if args.no_prefix:
-        prefix = None
-    else:
-        prefix = args.prefix
+    prefix = None if args.no_prefix else args.prefix
 
     try:
         result = initialize_project(

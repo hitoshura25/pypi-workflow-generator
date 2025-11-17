@@ -31,7 +31,13 @@ class MCPServer:
             "tools": [
                 {
                     "name": "generate_workflows",
-                    "description": "Generate GitHub Actions workflows for Python package publishing to PyPI. Creates 3 files: _reusable-test-build.yml (shared test/build logic), release.yml (manual releases), and test-pr.yml (PR testing). No PAT required - uses default GITHUB_TOKEN.",
+                    "description": (
+                        "Generate GitHub Actions workflows for Python package "
+                        "publishing to PyPI. Creates 3 files: _reusable-test-build.yml "
+                        "(shared test/build logic), release.yml (manual releases), and "
+                        "test-pr.yml (PR testing). No PAT required - uses default "
+                        "GITHUB_TOKEN."
+                    ),
                     "inputSchema": {
                         "type": "object",
                         "properties": {
@@ -47,7 +53,9 @@ class MCPServer:
                             },
                             "verbose_publish": {
                                 "type": "boolean",
-                                "description": "Enable verbose mode for PyPI publishing",
+                                "description": (
+                                    "Enable verbose mode for PyPI publishing"
+                                ),
                                 "default": False,
                             },
                         },
@@ -56,7 +64,12 @@ class MCPServer:
                 },
                 {
                     "name": "initialize_project",
-                    "description": "Initialize a new Python project with pyproject.toml and setup.py configured for PyPI publishing. By default, auto-detects git username as prefix to avoid PyPI naming conflicts.",
+                    "description": (
+                        "Initialize a new Python project with pyproject.toml and "
+                        "setup.py configured for PyPI publishing. By default, "
+                        "auto-detects git username as prefix to avoid PyPI naming "
+                        "conflicts."
+                    ),
                     "inputSchema": {
                         "type": "object",
                         "properties": {
@@ -83,7 +96,11 @@ class MCPServer:
                             },
                             "prefix": {
                                 "type": "string",
-                                "description": "Package name prefix. Use 'AUTO' to auto-detect from git (default), explicit string for custom prefix, or 'NONE' to skip prefix.",
+                                "description": (
+                                    "Package name prefix. Use 'AUTO' to auto-detect "
+                                    "from git (default), explicit string for custom "
+                                    "prefix, or 'NONE' to skip prefix."
+                                ),
                                 "default": "AUTO",
                             },
                         },
@@ -99,7 +116,10 @@ class MCPServer:
                 },
                 {
                     "name": "create_release",
-                    "description": "Create and push a git release tag to trigger PyPI publishing workflow",
+                    "description": (
+                        "Create and push a git release tag to trigger PyPI "
+                        "publishing workflow"
+                    ),
                     "inputSchema": {
                         "type": "object",
                         "properties": {

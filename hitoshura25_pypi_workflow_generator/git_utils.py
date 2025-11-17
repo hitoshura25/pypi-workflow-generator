@@ -90,9 +90,7 @@ def sanitize_prefix(username: str) -> str:
 
     # Remove leading/trailing hyphens and consecutive hyphens
     prefix = re.sub(r"-+", "-", prefix)  # Collapse multiple hyphens
-    prefix = prefix.strip("-")
-
-    return prefix
+    return prefix.strip("-")
 
 
 def get_default_prefix() -> str:
@@ -110,19 +108,21 @@ def get_default_prefix() -> str:
     username = get_git_username()
 
     if not username:
-        raise RuntimeError(
+        msg = (
             "Could not determine git username. Please either:\n"
             "  1. Configure git: git config --global github.user YOUR_USERNAME\n"
             "  2. Or provide --prefix manually: --prefix YOUR_PREFIX\n"
             "  3. Or skip prefix: --no-prefix"
         )
+        raise RuntimeError(msg)
 
     prefix = sanitize_prefix(username)
 
     if not prefix:
-        raise RuntimeError(
+        msg = (
             f"Git username '{username}' could not be converted to valid prefix.\n"
             f"Please provide --prefix manually."
         )
+        raise RuntimeError(msg)
 
     return prefix

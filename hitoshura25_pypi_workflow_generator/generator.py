@@ -6,8 +6,8 @@ This module contains the shared business logic used by both:
 - CLI mode (cli.py / main.py)
 """
 
-import os
 import subprocess
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from jinja2 import Environment, FileSystemLoader
@@ -43,27 +43,27 @@ def generate_workflows(
         FileNotFoundError: If pyproject.toml or setup.py missing
     """
     # Validation
-    if not os.path.exists("pyproject.toml") or not os.path.exists("setup.py"):
+    if not Path("pyproject.toml").exists() or not Path("setup.py").exists():
         raise FileNotFoundError(
             "Project not initialized. Run 'pypi-workflow-generator-init' first."
         )
 
     # Get template directory
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    script_dir = Path(__file__).resolve().parent
 
     # Set up Jinja2 environment
-    env = Environment(loader=FileSystemLoader(script_dir))
+    env = Environment(loader=FileSystemLoader(str(script_dir)))
 
     # Construct output directories
     output_dir = (
-        base_output_dir
+        Path(base_output_dir)
         if base_output_dir
-        else os.path.join(os.getcwd(), ".github", "workflows")
+        else Path.cwd() / ".github" / "workflows"
     )
-    scripts_dir = os.path.join(os.getcwd(), "scripts")
+    scripts_dir = Path.cwd() / "scripts"
 
-    os.makedirs(output_dir, exist_ok=True)
-    os.makedirs(scripts_dir, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    scripts_dir.mkdir(parents=True, exist_ok=True)
 
     files_created = []
 
@@ -85,11 +85,10 @@ def generate_workflows(
         template = env.get_template(template_name)
         content = template.render(**context)
 
-        full_output_path = os.path.join(output_dir, output_filename)
-        with open(full_output_path, "w") as f:
-            f.write(content)
+        full_output_path = output_dir / output_filename
+        full_output_path.write_text(content)
 
-        files_created.append(full_output_path)
+        files_created.append(str(full_output_path))
 
     # Generate script files
     script_templates = [("scripts/calculate_version.sh.j2", "calculate_version.sh")]
@@ -98,14 +97,13 @@ def generate_workflows(
         template = env.get_template(template_name)
         content = template.render(**context)
 
-        full_output_path = os.path.join(scripts_dir, output_filename)
-        with open(full_output_path, "w") as f:
-            f.write(content)
+        full_output_path = scripts_dir / output_filename
+        full_output_path.write_text(content)
 
         # Make script executable
-        os.chmod(full_output_path, 0o755)
+        full_output_path.chmod(0o755)
 
-        files_created.append(full_output_path)
+        files_created.append(str(full_output_path))
 
     return {
         "success": True,
@@ -189,29 +187,31 @@ def initialize_project(
         return {"success": False, "error": f"Invalid import name: {import_name}"}
 
     # Create package directory
-    if not os.path.exists(import_name):
-        os.makedirs(import_name)
+    package_dir = Path(import_name)
+    if not package_dir.exists():
+        package_dir.mkdir(parents=True)
 
     # Create __init__.py in package directory
-    init_file = os.path.join(import_name, "__init__.py")
-    if not os.path.exists(init_file):
-        with open(init_file, "w") as f:
-            f.write(f'"""{final_package_name} package."""\n')
-            f.write('__version__ = "0.1.0"\n')
+    init_file = package_dir / "__init__.py"
+    if not init_file.exists():
+        init_file.write_text(
+            f'"""{final_package_name} package."""\n__version__ = "0.1.0"\n'
+        )
 
     # Create main.py in package directory
-    main_file = os.path.join(import_name, "main.py")
-    if not os.path.exists(main_file):
-        with open(main_file, "w") as f:
-            f.write('"""Main module."""\n\n')
-            f.write("def main():\n")
-            f.write('    """Main entry point."""\n')
-            f.write(f'    print("Hello from {final_package_name}!")\n')
-            f.write('\n\nif __name__ == "__main__":\n')
-            f.write("    main()\n")
+    main_file = package_dir / "main.py"
+    if not main_file.exists():
+        main_file.write_text(
+            '"""Main module."""\n\n'
+            "def main():\n"
+            '    """Main entry point."""\n'
+            f'    print("Hello from {final_package_name}!")\n'
+            '\n\nif __name__ == "__main__":\n'
+            "    main()\n"
+        )
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    env = Environment(loader=FileSystemLoader(script_dir))
+    script_dir = Path(__file__).resolve().parent
+    env = Environment(loader=FileSystemLoader(str(script_dir)))
 
     # Render pyproject.toml
     pyproject_template = env.get_template("pyproject.toml.j2")
@@ -230,11 +230,8 @@ def initialize_project(
     )
 
     # Write files
-    with open("pyproject.toml", "w") as f:
-        f.write(pyproject_content)
-
-    with open("setup.py", "w") as f:
-        f.write(setup_content)
+    Path("pyproject.toml").write_text(pyproject_content)
+    Path("setup.py").write_text(setup_content)
 
     files_created = [
         "pyproject.toml",

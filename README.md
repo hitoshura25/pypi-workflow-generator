@@ -605,9 +605,7 @@ target-version = "py38"
 [tool.ruff.lint]
 # Enabled rule categories
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "ISC", "ICN", "PIE", "PT", "Q", "RET", "SIM", "TID", "ARG", "PTH", "PD", "PL", "NPY", "PERF", "RUF"]
-ignore = [
-    "PTH",  # Pathlib - would require significant refactoring for existing code
-]
+ignore = []
 
 # Allow fix for all enabled rules (when `--fix` is used)
 fixable = ["ALL"]
@@ -619,7 +617,7 @@ quote-style = "double"
 indent-style = "space"
 ```
 
-**Note**: PTH (pathlib) rules are ignored by default since migrating from `os.path` to `pathlib` can require significant refactoring. You can enable them once your codebase is ready for the migration.
+**Note**: The default configuration enables comprehensive linting without ignores. For new projects, this encourages best practices from the start (including using `pathlib` instead of `os.path`).
 
 **Common Customizations:**
 

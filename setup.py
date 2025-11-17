@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from setuptools import find_packages, setup
 
@@ -10,8 +11,7 @@ def local_scheme(version):
 
 
 try:
-    with open("README.md", encoding="utf-8") as fh:
-        long_description = fh.read()
+    long_description = Path("README.md").read_text(encoding="utf-8")
 except FileNotFoundError:
     long_description = ""
 

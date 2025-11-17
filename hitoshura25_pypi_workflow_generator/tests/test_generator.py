@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
@@ -9,7 +10,7 @@ def test_generate_workflows_default_arguments(tmp_path):
     (tmp_path / "pyproject.toml").write_text("[build-system]")
     (tmp_path / "setup.py").write_text("from setuptools import setup\nsetup()")
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     os.chdir(tmp_path)
 
     try:
@@ -41,7 +42,7 @@ def test_generate_workflows_default_arguments(tmp_path):
         assert script_file.stat().st_mode & 0o111  # Check executable bit
 
         # Check reusable workflow content
-        with open(reusable_file) as f:
+        with reusable_file.open() as f:
             content = f.read()
 
         assert "python-version: '3.11'" in content or "python_version" in content
@@ -62,7 +63,7 @@ def test_generate_workflows_custom_arguments(tmp_path):
     (tmp_path / "pyproject.toml").write_text("[build-system]")
     (tmp_path / "setup.py").write_text("from setuptools import setup\nsetup()")
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     os.chdir(tmp_path)
 
     try:
@@ -94,7 +95,7 @@ def test_generate_workflows_custom_arguments(tmp_path):
         assert script_file.stat().st_mode & 0o111  # Check executable bit
 
         # Check custom Python version in reusable workflow
-        with open(reusable_file) as f:
+        with reusable_file.open() as f:
             reusable_content = f.read()
 
         assert "3.9" in reusable_content
@@ -111,7 +112,7 @@ def test_generate_workflows_custom_arguments(tmp_path):
         assert "ruff format --check ." in reusable_content
 
         # Check verbose publish in test-pr workflow (where publishing happens now)
-        with open(test_pr_file) as f:
+        with test_pr_file.open() as f:
             test_pr_content = f.read()
 
         assert "verbose: true" in test_pr_content

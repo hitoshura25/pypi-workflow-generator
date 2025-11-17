@@ -15,6 +15,7 @@ A dual-mode tool (MCP server + CLI) for generating GitHub Actions workflows for 
 - ✅ **Production Publishing**: Manual releases via GitHub Actions UI
 - ✅ **Complete Project Initialization**: Generates pyproject.toml and setup.py
 - ✅ **DRY Architecture**: Reusable workflows for shared logic
+- ✅ **Code Quality Linting**: Automatic Ruff linting in all generated workflows (always enabled)
 
 ## Installation
 
@@ -214,7 +215,8 @@ Automatically tests pull requests:
 Shared logic called by other workflows:
 
 - **Parameterized**: Accepts Python version, test path, and artifact_version
-- **Test Pipeline**: Checkout → setup → test → build
+- **Test Pipeline**: Checkout → setup → **lint** → test → build
+- **Code Quality**: Runs Ruff linting (check + format) before tests (fail-fast)
 - **Artifact Export**: Uploads built packages for use by caller workflows
 - **Version Override**: Uses `SETUPTOOLS_SCM_PRETEND_VERSION` when `artifact_version` is provided
 - **Reusable**: Single source of truth for test/build logic
@@ -550,18 +552,198 @@ Were all created by running:
 ```bash
 hitoshura25-pypi-workflow-generator \
   --python-version 3.11 \
-  --test-path hitoshura25_pypi_workflow_generator/ \
-  --verbose-publish
+  --test-path hitoshura25_pypi_workflow_generator/
 ```
+
+**All workflows include Ruff linting by default!** Every PR and release is automatically checked for code quality before tests run.
 
 This ensures:
 - ✅ The tool actually works (we use it ourselves)
-- ✅ All 3 workflows are tested in production
+- ✅ All features including linting are tested in production
 - ✅ The templates stay consistent with real-world usage
 - ✅ We practice what we preach
 - ✅ Users can see real examples of the generated output
+- ✅ Our codebase maintains high code quality standards
 
 Check the workflow file headers to see the exact command used. Try creating a release using the GitHub Actions UI!
+
+## Code Quality with Ruff
+
+All generated workflows include **automatic code linting** using [Ruff](https://docs.astral.sh/ruff/), a fast, modern Python linter written in Rust.
+
+### What's Included
+
+When you generate workflows, your project gets:
+
+1. **Automatic Linting in CI/CD**: Every PR and release runs `ruff check` and `ruff format --check`
+2. **Fail-Fast Approach**: Linting runs **before** tests to catch issues early
+3. **Comprehensive Rules**: Sensible defaults covering code style, bugs, and best practices
+4. **Ruff Configuration**: Complete `[tool.ruff]` section added to generated `pyproject.toml`
+
+### Linting is Always Enabled
+
+**Important**: Linting is **always included** in generated workflows. This opinionated approach:
+- ✅ Promotes best practices from day one
+- ✅ Keeps code quality consistent across all generated projects
+- ✅ Reduces bugs and improves code readability
+- ✅ Simplifies the tool (no configuration flags needed)
+
+If you don't want linting, you can manually delete the "Lint with Ruff" step from `.github/workflows/_reusable-test-build.yml` after generation.
+
+### Customizing Ruff Configuration
+
+The generated `pyproject.toml` includes a comprehensive Ruff configuration that you can customize:
+
+```toml
+[tool.ruff]
+# Line length to match Black default
+line-length = 88
+
+# Target Python version
+target-version = "py38"
+
+[tool.ruff.lint]
+# Enabled rule categories
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "ISC", "ICN", "PIE", "PT", "Q", "RET", "SIM", "TID", "ARG", "PTH", "PD", "PL", "NPY", "PERF", "RUF"]
+ignore = []
+
+# Allow fix for all enabled rules (when `--fix` is used)
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+# Use Black-compatible formatting
+quote-style = "double"
+indent-style = "space"
+```
+
+**Common Customizations:**
+
+**Ignore specific rules**:
+```toml
+[tool.ruff.lint]
+ignore = [
+    "E501",  # Line too long (let formatter handle)
+    "D",     # Disable all docstring rules
+]
+```
+
+**Per-file ignores** (useful for tests):
+```toml
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]  # Allow assert in tests
+"__init__.py" = ["F401"]    # Allow unused imports in __init__
+```
+
+**Minimal configuration** (only errors):
+```toml
+[tool.ruff.lint]
+select = ["E", "F"]  # Only pycodestyle errors and Pyflakes
+```
+
+**Strict configuration** (all rules):
+```toml
+[tool.ruff.lint]
+select = ["ALL"]  # Enable all available rules
+ignore = ["D"]    # Except docstrings
+```
+
+See the [Ruff Rules Reference](https://docs.astral.sh/ruff/rules/) for all available rules.
+
+### Running Ruff Locally
+
+To run linting locally before pushing:
+
+```bash
+# Install Ruff (usually in dev dependencies)
+pip install ruff
+
+# Check for linting issues
+ruff check .
+
+# Check formatting
+ruff format --check .
+
+# Auto-fix issues (when possible)
+ruff check --fix .
+
+# Auto-format code
+ruff format .
+```
+
+**Pro tip**: Add a pre-commit hook to run linting automatically:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Create .pre-commit-config.yaml
+cat > .pre-commit-config.yaml <<EOF
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+EOF
+
+# Install the hooks
+pre-commit install
+```
+
+### Troubleshooting Common Linting Issues
+
+**Issue: "Line too long" errors**
+```bash
+# Solution 1: Let Ruff format handle it
+ruff format .
+
+# Solution 2: Ignore E501 in pyproject.toml
+[tool.ruff.lint]
+ignore = ["E501"]
+```
+
+**Issue: "Imported but unused" in `__init__.py`**
+```bash
+# Solution: Add per-file ignore
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+```
+
+**Issue: "Use of `assert` detected" in tests**
+```bash
+# Solution: Allow assert in test files
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+```
+
+**Issue: Linting too strict for legacy code**
+```bash
+# Solution: Start with minimal rules, add incrementally
+[tool.ruff.lint]
+select = ["E", "F"]  # Start with just errors
+# Later add: ["E", "F", "W", "I"]  # Add warnings and imports
+# Eventually: Full rule set
+```
+
+**Issue: CI fails but local linting passes**
+```bash
+# Ensure same Ruff version
+pip install ruff --upgrade
+
+# Check exact commands CI uses (from _reusable-test-build.yml):
+ruff check .
+ruff format --check .
+```
+
+### Why Ruff?
+
+- **Fast**: 10-100x faster than traditional Python linters (written in Rust)
+- **All-in-one**: Replaces Flake8, Black, isort, pyupgrade, and more
+- **Modern**: Active development, excellent editor integration
+- **Industry Standard**: Widely adopted by major Python projects
+- **Simple**: Minimal configuration required
 
 ## Development
 
@@ -571,7 +753,15 @@ git clone https://github.com/hitoshura25/pypi-workflow-generator.git
 cd pypi-workflow-generator
 
 # Install dependencies
-pip install .[test]
+pip install .[test,dev]
+
+# Run linting (required before committing)
+ruff check .
+ruff format --check .
+
+# Auto-fix linting issues
+ruff check --fix .
+ruff format .
 
 # Run tests
 pytest
@@ -579,6 +769,8 @@ pytest
 # Build package
 python -m build
 ```
+
+**Important**: All code must pass linting before being committed. The CI/CD pipeline will reject PRs that don't pass `ruff check` and `ruff format --check`.
 
 ## Contributing
 

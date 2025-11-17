@@ -165,6 +165,53 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 ```
 
+#### Why This Configuration?
+
+This comprehensive rule set represents Ruff's best practices for modern Python development. While strict, it catches real bugs and enforces consistency:
+
+**Core Rules (E, F, W)**:
+- `E` (pycodestyle errors): PEP 8 violations that affect readability
+- `F` (Pyflakes): Unused imports, undefined variables, syntax errors
+- `W` (pycodestyle warnings): Style issues that can lead to bugs
+
+**Code Quality (I, N, UP, B)**:
+- `I` (isort): Consistent import ordering
+- `N` (pep8-naming): Proper naming conventions (classes, functions, variables)
+- `UP` (pyupgrade): Modern Python syntax (f-strings, type hints)
+- `B` (flake8-bugbear): Common bug patterns and anti-patterns
+
+**Bug Prevention (A, C4, DTZ, T10, EM)**:
+- `A` (flake8-builtins): Avoid shadowing built-in names
+- `C4` (flake8-comprehensions): Proper list/dict comprehensions
+- `DTZ` (flake8-datetimez): Timezone-aware datetime usage
+- `T10` (flake8-debugger): Catch forgotten debugger statements
+- `EM` (flake8-errmsg): Proper exception message formatting
+
+**Code Clarity (ISC, ICN, PIE, Q, RET, SIM)**:
+- `ISC` (flake8-implicit-str-concat): Explicit string concatenation
+- `ICN` (flake8-import-conventions): Standard import conventions (pd, np)
+- `PIE` (flake8-pie): Misc improvements and simplifications
+- `Q` (flake8-quotes): Consistent quote style
+- `RET` (flake8-return): Proper return statement usage
+- `SIM` (flake8-simplify): Code simplification suggestions
+
+**Best Practices (TID, ARG, PTH)**:
+- `TID` (flake8-tidy-imports): Clean import structure
+- `ARG` (flake8-unused-arguments): Catch unused function arguments
+- `PTH` (flake8-use-pathlib): Modern pathlib instead of os.path
+
+**Framework-Specific (PD, PT, NPY)**:
+- `PD` (pandas-vet): Pandas best practices (if using pandas)
+- `PT` (flake8-pytest-style): Pytest best practices (for test files)
+- `NPY` (NumPy): NumPy-specific rules (if using numpy)
+
+**Performance & Ruff-Specific (PL, PERF, RUF)**:
+- `PL` (Pylint): Additional code quality checks
+- `PERF` (Perflint): Performance anti-patterns
+- `RUF` (Ruff-specific): Ruff's own custom rules
+
+**Note on Strictness**: While this configuration is comprehensive, it represents industry best practices. Users can customize their generated `pyproject.toml` after creation to adjust rules based on their project's needs. The opinionated defaults ensure high code quality from the start.
+
 ### Example Workflow Output
 
 After implementation, the `_reusable-test-build.yml` will contain:
@@ -188,16 +235,33 @@ After implementation, the `_reusable-test-build.yml` will contain:
 
 ## Implementation Plan
 
-### Phase 1: Template Updates
-1. Update `_reusable_test_build.yml.j2` to add linting step (no conditionals)
-2. Update `pyproject.toml.j2` with Ruff configuration and dev dependency
-3. Update `test_generator.py` to verify linting step is always present in generated workflows
+### Phase 1: Preparation and Template Updates
+
+**Critical**: The generator codebase must be made lint-compliant BEFORE updating templates to avoid circular dependency during implementation.
+
+0. **Fix Generator Codebase Linting Violations** (prerequisite)
+   - Add Ruff to this project's `pyproject.toml` dev dependencies
+   - Run `ruff check .` and `ruff format --check .` on the generator codebase
+   - Fix all linting violations using `ruff check --fix .` and `ruff format .`
+   - Manually address any remaining issues
+   - Verify codebase is fully lint-compliant before proceeding
+
+1. **Update Templates** (after codebase is clean)
+   - Update `_reusable_test_build.yml.j2` to add linting step (no conditionals)
+   - Update `pyproject.toml.j2` with Ruff configuration and dev dependency
+
+2. **Update Tests**
+   - Update `test_generator.py` to verify linting step is always present in generated workflows
+   - Verify tests pass with clean codebase
 
 ### Phase 2: Dogfooding
+
+**Note**: Steps 1-2 from Phase 1 (fixing generator codebase) are prerequisites completed BEFORE this phase.
+
 1. Regenerate this project's own workflows using the updated templates
-2. Add Ruff configuration to this project's `pyproject.toml`
-3. Fix any linting issues in the generator codebase itself
-4. Verify workflows pass with linting enabled
+2. Verify Ruff configuration is already in this project's `pyproject.toml` (from Phase 1, Step 0)
+3. Verify linting passes on the generator codebase (already fixed in Phase 1, Step 0)
+4. Test workflows end-to-end with linting enabled
 
 ### Phase 3: Documentation
 1. Update README.md with linting feature documentation
@@ -264,7 +328,7 @@ Add the linting step to `.github/workflows/_reusable-test-build.yml` after the "
     ruff format --check .
 ```
 
-Add to `pyproject.toml`:
+Add to `pyproject.toml` (see "Proposed Solution" section above for the full Ruff configuration including all rules and formatting settings):
 
 ```toml
 [project.optional-dependencies]
@@ -274,9 +338,7 @@ dev = [
 ]
 
 [tool.ruff]
-select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "ISC", "ICN", "PIE", "PT", "Q", "RET", "SIM", "TID", "ARG", "PTH", "PD", "PL", "NPY", "PERF", "RUF"]
-line-length = 88
-target-version = "py38"
+# Add the complete configuration from the "Proposed Solution > pyproject.toml.j2" section above
 ```
 
 ## Configuration Examples
@@ -402,8 +464,11 @@ Dogfooding (using our own tool) is critical for this feature because:
 
 1. **Add Ruff to Project Dependencies**
 
-   Update this project's `pyproject.toml` to include Ruff configuration:
+   Update this project's `pyproject.toml` to include Ruff as a dev dependency and add the Ruff configuration.
 
+   See the "Proposed Solution > pyproject.toml.j2" section above for the complete Ruff configuration to add.
+
+   Key additions:
    ```toml
    [project.optional-dependencies]
    dev = [
@@ -415,22 +480,14 @@ Dogfooding (using our own tool) is critical for this feature because:
    ]
 
    [tool.ruff]
-   select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "ISC", "ICN", "PIE", "PT", "Q", "RET", "SIM", "TID", "ARG", "PTH", "PD", "PL", "NPY", "PERF", "RUF"]
-   line-length = 88
-   target-version = "py38"
-   exclude = [
-       ".git",
-       ".venv",
-       "__pycache__",
-       "build",
-       "dist",
-       "*.egg-info",
-   ]
+   # Add complete configuration from "Proposed Solution" section
+   # (includes comprehensive rule set, exclusions, and formatting options)
    ```
 
 2. **Fix Existing Linting Issues**
 
-   Before enabling linting in workflows:
+   **CRITICAL TIMING**: This step must be completed BEFORE implementing the linting feature in templates (Phase 1, Step 0). This prevents a circular dependency where the generator's workflows would fail due to linting violations in the generator's own code.
+
    ```bash
    # Install ruff
    pip install ruff
@@ -445,6 +502,8 @@ Dogfooding (using our own tool) is critical for this feature because:
 
    # Manually fix remaining issues
    ```
+
+   Only proceed to template updates (step 3 below) after the generator codebase is fully lint-compliant.
 
 3. **Regenerate Workflows with Linting**
 

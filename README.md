@@ -605,7 +605,9 @@ target-version = "py38"
 [tool.ruff.lint]
 # Enabled rule categories
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "ISC", "ICN", "PIE", "PT", "Q", "RET", "SIM", "TID", "ARG", "PTH", "PD", "PL", "NPY", "PERF", "RUF"]
-ignore = []
+ignore = [
+    "PTH",  # Pathlib - would require significant refactoring for existing code
+]
 
 # Allow fix for all enabled rules (when `--fix` is used)
 fixable = ["ALL"]
@@ -616,6 +618,8 @@ unfixable = []
 quote-style = "double"
 indent-style = "space"
 ```
+
+**Note**: PTH (pathlib) rules are ignored by default since migrating from `os.path` to `pathlib` can require significant refactoring. You can enable them once your codebase is ready for the migration.
 
 **Common Customizations:**
 
@@ -639,6 +643,7 @@ ignore = [
 ```toml
 [tool.ruff.lint]
 select = ["E", "F"]  # Only pycodestyle errors and Pyflakes
+ignore = []  # No ignores needed for minimal rules
 ```
 
 **Strict configuration** (all rules):

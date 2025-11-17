@@ -3,8 +3,11 @@ Tests for MCP server functionality.
 """
 
 import os
+
 import pytest
+
 from hitoshura25_pypi_workflow_generator.server import MCPServer
+
 
 @pytest.mark.asyncio
 async def test_list_tools():
@@ -48,7 +51,12 @@ async def test_list_tools_schema_validation():
     assert "author" in init_tool["inputSchema"]["properties"]
     assert "author_email" in init_tool["inputSchema"]["properties"]
     assert set(init_tool["inputSchema"]["required"]) == {
-        "package_name", "author", "author_email", "description", "url", "command_name"
+        "package_name",
+        "author",
+        "author_email",
+        "description",
+        "url",
+        "command_name",
     }
 
     # Check create_release schema
@@ -72,10 +80,7 @@ async def test_call_tool_generate_workflows(tmp_path):
         (tmp_path / "setup.py").write_text("from setuptools import setup\nsetup()")
 
         result = await server.handle_call_tool(
-            "generate_workflows",
-            {
-                "python_version": "3.11"
-            }
+            "generate_workflows", {"python_version": "3.11"}
         )
 
         assert "content" in result
@@ -103,6 +108,11 @@ async def test_call_tool_generate_workflows(tmp_path):
         content = reusable_path.read_text()
         assert "3.11" in content
 
+        # Verify linting step is present
+        assert "Lint with Ruff" in content
+        assert "ruff check ." in content
+        assert "ruff format --check ." in content
+
     finally:
         os.chdir(original_cwd)
 
@@ -122,11 +132,7 @@ async def test_call_tool_generate_workflows_with_options(tmp_path):
 
         result = await server.handle_call_tool(
             "generate_workflows",
-            {
-                "python_version": "3.10",
-                "test_path": "tests/",
-                "verbose_publish": True
-            }
+            {"python_version": "3.10", "test_path": "tests/", "verbose_publish": True},
         )
 
         assert result.get("isError") == False
@@ -147,6 +153,11 @@ async def test_call_tool_generate_workflows_with_options(tmp_path):
         # Verify test_path is actually used in pytest command
         assert "pytest" in content
         assert "${{ inputs.test_path }}" in content or "pytest tests/" in content
+
+        # Verify linting step is present
+        assert "Lint with Ruff" in content
+        assert "ruff check ." in content
+        assert "ruff format --check ." in content
 
     finally:
         os.chdir(original_cwd)
@@ -170,8 +181,8 @@ async def test_call_tool_initialize_project(tmp_path):
                 "description": "A test package",
                 "url": "https://github.com/test/test-package",
                 "command_name": "test-cmd",
-                "prefix": "NONE"  # Skip prefix for this test
-            }
+                "prefix": "NONE",  # Skip prefix for this test
+            },
         )
 
         assert "content" in result
@@ -207,7 +218,7 @@ async def test_call_tool_initialize_project_missing_args():
         {
             "package_name": "test-package"
             # Missing other required fields
-        }
+        },
     )
 
     # Should return an error
@@ -221,12 +232,7 @@ async def test_call_tool_create_release():
     server = MCPServer()
 
     # Note: This will fail in a non-git repo, but we can test the call structure
-    result = await server.handle_call_tool(
-        "create_release",
-        {
-            "version": "v1.0.0"
-        }
-    )
+    result = await server.handle_call_tool("create_release", {"version": "v1.0.0"})
 
     # Should have content (either success or error message)
     assert "content" in result
@@ -249,12 +255,7 @@ async def test_handle_request_list_tools():
     """Test handling a full JSON-RPC request for tools/list."""
     server = MCPServer()
 
-    request = {
-        "jsonrpc": "2.0",
-        "id": 1,
-        "method": "tools/list",
-        "params": {}
-    }
+    request = {"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}
 
     response = await server.handle_request(request)
 
@@ -273,10 +274,8 @@ async def test_handle_request_call_tool():
         "method": "tools/call",
         "params": {
             "name": "generate_workflows",
-            "arguments": {
-                "python_version": "3.11"
-            }
-        }
+            "arguments": {"python_version": "3.11"},
+        },
     }
 
     response = await server.handle_request(request)
@@ -289,12 +288,7 @@ async def test_handle_request_unknown_method():
     """Test handling unknown method returns error."""
     server = MCPServer()
 
-    request = {
-        "jsonrpc": "2.0",
-        "id": 3,
-        "method": "unknown/method",
-        "params": {}
-    }
+    request = {"jsonrpc": "2.0", "id": 3, "method": "unknown/method", "params": {}}
 
     response = await server.handle_request(request)
 
@@ -326,14 +320,15 @@ async def test_generate_workflows_creates_all_files_via_mcp(tmp_path):
         (tmp_path / "setup.py").write_text("from setuptools import setup\nsetup()")
 
         result = await server.handle_call_tool(
-            "generate_workflows",
-            {"python_version": "3.11"}
+            "generate_workflows", {"python_version": "3.11"}
         )
 
         assert result.get("isError") == False
 
         # All 3 workflows should exist
-        assert (tmp_path / ".github" / "workflows" / "_reusable-test-build.yml").exists()
+        assert (
+            tmp_path / ".github" / "workflows" / "_reusable-test-build.yml"
+        ).exists()
         assert (tmp_path / ".github" / "workflows" / "release.yml").exists()
         assert (tmp_path / ".github" / "workflows" / "test-pr.yml").exists()
 

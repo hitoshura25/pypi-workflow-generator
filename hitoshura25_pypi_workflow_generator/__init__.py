@@ -13,16 +13,16 @@ __license__ = "Apache-2.0"
 
 # Export main functions for programmatic use
 from .generator import (
+    create_git_release,
     generate_workflows,
     initialize_project,
-    create_git_release,
 )
 
 __all__ = [
-    '__version__',
-    '__author__',
-    '__license__',
-    'generate_workflows',
-    'initialize_project',
-    'create_git_release',
+    "__author__",
+    "__license__",
+    "__version__",
+    "create_git_release",
+    "generate_workflows",
+    "initialize_project",
 ]

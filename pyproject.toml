@@ -43,6 +43,7 @@ dev = [
     "wheel",
     "setuptools_scm",
     "build",
+    "ruff",
 ]
 
 [project.urls]
@@ -67,4 +68,50 @@ exclude = ["tests*"]
 
 [tool.setuptools.package-data]
 hitoshura25_pypi_workflow_generator = ["*.j2"]
+
+[tool.ruff]
+# Exclude common directories
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+
+# Line length to match Black default
+line-length = 88
+
+# Target Python version
+target-version = "py38"
+
+[tool.ruff.lint]
+# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "DTZ", "T10", "EM", "ISC", "ICN", "PIE", "PT", "Q", "RET", "SIM", "TID", "ARG", "PTH", "PD", "PL", "NPY", "PERF", "RUF"]
+ignore = [
+    "PTH",      # Pathlib - would require significant refactoring
+    "EM101",    # Exception message literals - too strict
+    "EM102",    # Exception f-string literals - too strict
+    "PLR2004",  # Magic value comparison - too strict for tests
+    "ARG001",   # Unused function arguments - sometimes necessary
+    "SIM105",   # contextlib.suppress - personal preference
+    "E501",     # Line too long - let formatter handle this
+    "E712",     # Comparison to True/False - style preference
+    "PLC0415",  # Import at top-level - necessary for test isolation
+    "PLR0913",  # Too many arguments - sometimes necessary
+    "RET504",   # Unnecessary assignment - sometimes improves readability
+    "SIM108",   # Ternary operator - sometimes if-else is clearer
+]
+
+# Allow fix for all enabled rules (when `--fix` is used)
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+# Use Black-compatible formatting
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 

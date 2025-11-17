@@ -8,7 +8,9 @@ GitHub Actions workflows.
 
 import argparse
 import sys
+
 from .generator import generate_workflows
+
 
 def main():
     """Main CLI entry point."""
@@ -35,23 +37,21 @@ This creates:
   .github/workflows/release.yml
   .github/workflows/test-pr.yml
         """,
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.add_argument(
-        '--python-version',
-        default='3.11',
-        help='Python version to use in workflows (default: 3.11)'
+        "--python-version",
+        default="3.11",
+        help="Python version to use in workflows (default: 3.11)",
     )
     parser.add_argument(
-        '--test-path',
-        default='.',
-        help='Path to tests directory (default: .)'
+        "--test-path", default=".", help="Path to tests directory (default: .)"
     )
     parser.add_argument(
-        '--verbose-publish',
-        action='store_true',
-        help='Enable verbose mode for PyPI publishing actions'
+        "--verbose-publish",
+        action="store_true",
+        help="Enable verbose mode for PyPI publishing actions",
     )
 
     args = parser.parse_args()
@@ -60,17 +60,21 @@ This creates:
         result = generate_workflows(
             python_version=args.python_version,
             test_path=args.test_path,
-            verbose_publish=args.verbose_publish
+            verbose_publish=args.verbose_publish,
         )
-        print(result['message'])
+        print(result["message"])
         return 0
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
-        print("\nHint: Run 'pypi-workflow-generator-init' to initialize your project first.", file=sys.stderr)
+        print(
+            "\nHint: Run 'pypi-workflow-generator-init' to initialize your project first.",
+            file=sys.stderr,
+        )
         return 1
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

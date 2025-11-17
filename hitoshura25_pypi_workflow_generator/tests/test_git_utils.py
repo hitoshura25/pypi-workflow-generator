@@ -1,10 +1,13 @@
 """Tests for git utility functions."""
+
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 from hitoshura25_pypi_workflow_generator.git_utils import (
+    get_default_prefix,
     get_git_username,
     sanitize_prefix,
-    get_default_prefix
 )
 
 
@@ -29,7 +32,9 @@ def test_sanitize_prefix_with_email():
 def test_sanitize_prefix_with_special_chars():
     """Test sanitizing names with special characters."""
     assert sanitize_prefix("alice_dev") == "alice-dev"
-    assert sanitize_prefix("bob's_packages") == "bob-s-packages"  # Apostrophe replaced with hyphen
+    assert (
+        sanitize_prefix("bob's_packages") == "bob-s-packages"
+    )  # Apostrophe replaced with hyphen
     assert sanitize_prefix("user#123") == "user-123"
 
 
@@ -45,29 +50,30 @@ def test_sanitize_prefix_uppercase():
     assert sanitize_prefix("John-Smith") == "john-smith"
 
 
-@patch('subprocess.run')
+@patch("subprocess.run")
 def test_get_git_username_github_user(mock_run):
     """Test getting username from github.user."""
-    mock_run.return_value = MagicMock(
-        returncode=0,
-        stdout="jsmith\n"
-    )
+    mock_run.return_value = MagicMock(returncode=0, stdout="jsmith\n")
     assert get_git_username() == "jsmith"
     # Should call git config --get github.user
     mock_run.assert_called_once()
-    assert 'github.user' in str(mock_run.call_args)
+    assert "github.user" in str(mock_run.call_args)
 
 
-@patch('subprocess.run')
+@patch("subprocess.run")
 def test_get_git_username_from_remote_url_ssh(mock_run):
     """Test extracting username from SSH remote URL."""
+
     def side_effect(*args, **kwargs):
         cmd = args[0]
-        if 'github.user' in cmd:
+        if "github.user" in cmd:
             return MagicMock(returncode=1, stdout="")
-        elif 'remote' in cmd and 'get-url' in cmd:
-            return MagicMock(returncode=0, stdout="git@github.com:hitoshura25/pypi-workflow-generator.git\n")
-        elif 'user.name' in cmd:
+        if "remote" in cmd and "get-url" in cmd:
+            return MagicMock(
+                returncode=0,
+                stdout="git@github.com:hitoshura25/pypi-workflow-generator.git\n",
+            )
+        if "user.name" in cmd:
             return MagicMock(returncode=1, stdout="")
         return MagicMock(returncode=1, stdout="")
 
@@ -75,16 +81,19 @@ def test_get_git_username_from_remote_url_ssh(mock_run):
     assert get_git_username() == "hitoshura25"
 
 
-@patch('subprocess.run')
+@patch("subprocess.run")
 def test_get_git_username_from_remote_url_https(mock_run):
     """Test extracting username from HTTPS remote URL."""
+
     def side_effect(*args, **kwargs):
         cmd = args[0]
-        if 'github.user' in cmd:
+        if "github.user" in cmd:
             return MagicMock(returncode=1, stdout="")
-        elif 'remote' in cmd and 'get-url' in cmd:
-            return MagicMock(returncode=0, stdout="https://github.com/jsmith/my-repo.git\n")
-        elif 'user.name' in cmd:
+        if "remote" in cmd and "get-url" in cmd:
+            return MagicMock(
+                returncode=0, stdout="https://github.com/jsmith/my-repo.git\n"
+            )
+        if "user.name" in cmd:
             return MagicMock(returncode=1, stdout="")
         return MagicMock(returncode=1, stdout="")
 
@@ -92,16 +101,15 @@ def test_get_git_username_from_remote_url_https(mock_run):
     assert get_git_username() == "jsmith"
 
 
-@patch('subprocess.run')
+@patch("subprocess.run")
 def test_get_git_username_fallback_to_user_name(mock_run):
     """Test fallback to user.name when github.user and remote not set."""
+
     def side_effect(*args, **kwargs):
         cmd = args[0]
-        if 'github.user' in cmd:
+        if "github.user" in cmd or ("remote" in cmd and "get-url" in cmd):
             return MagicMock(returncode=1, stdout="")
-        elif 'remote' in cmd and 'get-url' in cmd:
-            return MagicMock(returncode=1, stdout="")
-        elif 'user.name' in cmd:
+        if "user.name" in cmd:
             return MagicMock(returncode=0, stdout="John Smith\n")
         return MagicMock(returncode=1, stdout="")
 
@@ -109,31 +117,28 @@ def test_get_git_username_fallback_to_user_name(mock_run):
     assert get_git_username() == "John Smith"
 
 
-@patch('subprocess.run')
+@patch("subprocess.run")
 def test_get_git_username_not_configured(mock_run):
     """Test when git is not configured."""
     mock_run.return_value = MagicMock(returncode=1, stdout="")
     assert get_git_username() is None
 
 
-@patch('subprocess.run')
+@patch("subprocess.run")
 def test_get_git_username_git_not_installed(mock_run):
     """Test when git is not installed."""
     mock_run.side_effect = FileNotFoundError()
     assert get_git_username() is None
 
 
-@patch('subprocess.run')
+@patch("subprocess.run")
 def test_get_default_prefix_success(mock_run):
     """Test successful prefix detection."""
-    mock_run.return_value = MagicMock(
-        returncode=0,
-        stdout="jsmith\n"
-    )
+    mock_run.return_value = MagicMock(returncode=0, stdout="jsmith\n")
     assert get_default_prefix() == "jsmith"
 
 
-@patch('subprocess.run')
+@patch("subprocess.run")
 def test_get_default_prefix_failure(mock_run):
     """Test failure when git not configured."""
     mock_run.return_value = MagicMock(returncode=1, stdout="")
@@ -142,22 +147,19 @@ def test_get_default_prefix_failure(mock_run):
         get_default_prefix()
 
 
-@patch('subprocess.run')
+@patch("subprocess.run")
 def test_get_default_prefix_with_sanitization(mock_run):
     """Test that get_default_prefix sanitizes the username."""
-    mock_run.return_value = MagicMock(
-        returncode=0,
-        stdout="John Smith\n"
-    )
+    mock_run.return_value = MagicMock(returncode=0, stdout="John Smith\n")
     assert get_default_prefix() == "john-smith"
 
 
-@patch('subprocess.run')
+@patch("subprocess.run")
 def test_get_default_prefix_empty_after_sanitization(mock_run):
     """Test error when username becomes empty after sanitization."""
     mock_run.return_value = MagicMock(
         returncode=0,
-        stdout="---\n"  # Only special chars that get removed
+        stdout="---\n",  # Only special chars that get removed
     )
 
     with pytest.raises(RuntimeError, match="could not be converted to valid prefix"):

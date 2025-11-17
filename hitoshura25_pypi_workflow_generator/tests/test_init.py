@@ -1,6 +1,8 @@
 import os
 from unittest.mock import patch
+
 from hitoshura25_pypi_workflow_generator.generator import initialize_project
+
 
 def test_init_project(tmp_path):
     """Test project initialization without prefix."""
@@ -11,38 +13,41 @@ def test_init_project(tmp_path):
     try:
         # Run the initialize_project function with no prefix
         result = initialize_project(
-            package_name='my-package',
-            author='My Name',
-            author_email='my.email@example.com',
-            description='My new package.',
-            url='https://github.com/my-username/my-package',
-            command_name='my-command',
-            prefix=None  # Skip prefix
+            package_name="my-package",
+            author="My Name",
+            author_email="my.email@example.com",
+            description="My new package.",
+            url="https://github.com/my-username/my-package",
+            command_name="my-command",
+            prefix=None,  # Skip prefix
         )
 
         # Assert the function returned success
-        assert result['success']
-        assert 'files_created' in result
-        assert 'message' in result
-        assert result['package_name'] == 'my-package'
-        assert result['import_name'] == 'my_package'
+        assert result["success"]
+        assert "files_created" in result
+        assert "message" in result
+        assert result["package_name"] == "my-package"
+        assert result["import_name"] == "my_package"
 
         # Assert that the files have been created
-        assert os.path.exists('pyproject.toml')
-        assert os.path.exists('setup.py')
-        assert os.path.exists('my_package/__init__.py')
-        assert os.path.exists('my_package/main.py')
+        assert os.path.exists("pyproject.toml")
+        assert os.path.exists("setup.py")
+        assert os.path.exists("my_package/__init__.py")
+        assert os.path.exists("my_package/main.py")
 
         # Assert that the contents of the files are correct
-        with open('pyproject.toml', 'r') as f:
+        with open("pyproject.toml") as f:
             pyproject_content = f.read()
         assert "[build-system]" in pyproject_content
-        assert "requires = [\"setuptools>=61.0\", \"setuptools_scm[toml]>=6.2\"]" in pyproject_content
-        assert "build-backend = \"setuptools.build_meta\"" in pyproject_content
+        assert (
+            'requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]'
+            in pyproject_content
+        )
+        assert 'build-backend = "setuptools.build_meta"' in pyproject_content
         assert "[tool.setuptools_scm]" in pyproject_content
-        assert "version_scheme = \"post-release\"" in pyproject_content
+        assert 'version_scheme = "post-release"' in pyproject_content
 
-        with open('setup.py', 'r') as f:
+        with open("setup.py") as f:
             setup_content = f.read()
         assert "name='my-package'," in setup_content
         assert "author='My Name'," in setup_content
@@ -55,7 +60,7 @@ def test_init_project(tmp_path):
         os.chdir(original_cwd)
 
 
-@patch('hitoshura25_pypi_workflow_generator.git_utils.get_git_username')
+@patch("hitoshura25_pypi_workflow_generator.git_utils.get_git_username")
 def test_init_with_auto_prefix(mock_git, tmp_path):
     """Test initialization with auto-detected prefix."""
     mock_git.return_value = "jsmith"
@@ -71,13 +76,13 @@ def test_init_with_auto_prefix(mock_git, tmp_path):
             description="Cool app",
             url="https://github.com/jsmith/coolapp",
             command_name="coolapp",
-            prefix="AUTO"
+            prefix="AUTO",
         )
 
-        assert result['success']
-        assert result['package_name'] == "jsmith-coolapp"
-        assert result['import_name'] == "jsmith_coolapp"
-        assert result['prefix'] == "jsmith"
+        assert result["success"]
+        assert result["package_name"] == "jsmith-coolapp"
+        assert result["import_name"] == "jsmith_coolapp"
+        assert result["prefix"] == "jsmith"
 
         # Check directory created
         assert os.path.exists("jsmith_coolapp")
@@ -85,9 +90,12 @@ def test_init_with_auto_prefix(mock_git, tmp_path):
         assert os.path.exists("jsmith_coolapp/main.py")
 
         # Check setup.py has correct name
-        with open('setup.py', 'r') as f:
+        with open("setup.py") as f:
             setup_content = f.read()
-        assert "name='jsmith-coolapp'" in setup_content or 'name="jsmith-coolapp"' in setup_content
+        assert (
+            "name='jsmith-coolapp'" in setup_content
+            or 'name="jsmith-coolapp"' in setup_content
+        )
 
     finally:
         os.chdir(original_cwd)
@@ -106,21 +114,24 @@ def test_init_with_custom_prefix(tmp_path):
             description="Cool app",
             url="https://github.com/acme/coolapp",
             command_name="coolapp",
-            prefix="myorg"
+            prefix="myorg",
         )
 
-        assert result['success']
-        assert result['package_name'] == "myorg-coolapp"
-        assert result['import_name'] == "myorg_coolapp"
-        assert result['prefix'] == "myorg"
+        assert result["success"]
+        assert result["package_name"] == "myorg-coolapp"
+        assert result["import_name"] == "myorg_coolapp"
+        assert result["prefix"] == "myorg"
 
         # Check directory created
         assert os.path.exists("myorg_coolapp")
 
         # Check setup.py has correct name
-        with open('setup.py', 'r') as f:
+        with open("setup.py") as f:
             setup_content = f.read()
-        assert "name='myorg-coolapp'" in setup_content or 'name="myorg-coolapp"' in setup_content
+        assert (
+            "name='myorg-coolapp'" in setup_content
+            or 'name="myorg-coolapp"' in setup_content
+        )
 
     finally:
         os.chdir(original_cwd)
@@ -139,19 +150,19 @@ def test_init_with_no_prefix(tmp_path):
             description="Cool app",
             url="https://github.com/dev/coolapp",
             command_name="coolapp",
-            prefix=None
+            prefix=None,
         )
 
-        assert result['success']
-        assert result['package_name'] == "coolapp"
-        assert result['import_name'] == "coolapp"
-        assert result['prefix'] is None
+        assert result["success"]
+        assert result["package_name"] == "coolapp"
+        assert result["import_name"] == "coolapp"
+        assert result["prefix"] is None
 
         # Check directory created
         assert os.path.exists("coolapp")
 
         # Check setup.py has correct name
-        with open('setup.py', 'r') as f:
+        with open("setup.py") as f:
             setup_content = f.read()
         assert "name='coolapp'" in setup_content or 'name="coolapp"' in setup_content
 
@@ -159,7 +170,7 @@ def test_init_with_no_prefix(tmp_path):
         os.chdir(original_cwd)
 
 
-@patch('hitoshura25_pypi_workflow_generator.git_utils.get_git_username')
+@patch("hitoshura25_pypi_workflow_generator.git_utils.get_git_username")
 def test_init_auto_prefix_fails_when_git_not_configured(mock_git, tmp_path):
     """Test that AUTO prefix fails gracefully when git not configured."""
     mock_git.return_value = None
@@ -175,12 +186,12 @@ def test_init_auto_prefix_fails_when_git_not_configured(mock_git, tmp_path):
             description="Cool app",
             url="https://github.com/dev/coolapp",
             command_name="coolapp",
-            prefix="AUTO"
+            prefix="AUTO",
         )
 
-        assert not result['success']
-        assert 'error' in result
-        assert "Could not determine git username" in result['error']
+        assert not result["success"]
+        assert "error" in result
+        assert "Could not determine git username" in result["error"]
 
     finally:
         os.chdir(original_cwd)

@@ -213,7 +213,9 @@ def initialize_project(  # noqa: PLR0913
 
     # Render pyproject.toml
     pyproject_template = env.get_template("pyproject.toml.j2")
-    pyproject_content = pyproject_template.render()
+    pyproject_content = pyproject_template.render(
+        final_package_name=final_package_name,
+    )
 
     # Render setup.py
     setup_template = env.get_template("setup.py.j2")

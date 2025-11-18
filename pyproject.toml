@@ -95,9 +95,6 @@ ignore = []
 fixable = ["ALL"]
 unfixable = []
 
-[tool.ruff.lint.per-file-ignores]
-# Tests have function-scoped imports and use os.chdir which requires os.getcwd
-"hitoshura25_pypi_workflow_generator/tests/**/*.py" = ["PTH", "PLC0415", "PLR2004"]
 
 [tool.ruff.format]
 # Use Black-compatible formatting

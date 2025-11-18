@@ -684,7 +684,8 @@ pip install pre-commit
 cat > .pre-commit-config.yaml <<EOF
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.6
+    # Check for latest: https://github.com/astral-sh/ruff-pre-commit/releases
+    rev: v0.8.6  # Replace with latest version
     hooks:
       - id: ruff
         args: [--fix]

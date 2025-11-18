@@ -7,6 +7,9 @@ from pathlib import Path
 
 from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
+# Expected number of generated files: 3 workflows + 1 script
+EXPECTED_FILE_COUNT = 4
+
 
 def test_release_workflow_structure(tmp_path: Path):
     """Test that release workflow has correct structure."""
@@ -14,7 +17,7 @@ def test_release_workflow_structure(tmp_path: Path):
     (tmp_path / "pyproject.toml").write_text("[build-system]")
     (tmp_path / "setup.py").write_text("from setuptools import setup\nsetup()")
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     os.chdir(tmp_path)
 
     try:
@@ -30,7 +33,7 @@ def test_release_workflow_structure(tmp_path: Path):
         output_file = output_dir / "release.yml"
         assert output_file.exists()
 
-        with open(output_file) as f:
+        with output_file.open() as f:
             content = f.read()
 
         # Verify workflow structure
@@ -51,7 +54,7 @@ def test_workflows_creates_directory(tmp_path: Path):
     (tmp_path / "pyproject.toml").write_text("[build-system]")
     (tmp_path / "setup.py").write_text("from setuptools import setup\nsetup()")
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     os.chdir(tmp_path)
 
     try:
@@ -74,7 +77,7 @@ def test_generate_workflows_includes_all_three_files(tmp_path: Path):
     (tmp_path / "pyproject.toml").write_text("[build-system]")
     (tmp_path / "setup.py").write_text("from setuptools import setup\nsetup()")
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     os.chdir(tmp_path)
 
     try:
@@ -85,7 +88,9 @@ def test_generate_workflows_includes_all_three_files(tmp_path: Path):
 
         assert result["success"]
         assert "files_created" in result
-        assert len(result["files_created"]) == 4  # 3 workflows + 1 script
+        assert (
+            len(result["files_created"]) == EXPECTED_FILE_COUNT
+        )  # 3 workflows + 1 script
 
         # All 3 workflows should exist
         assert (output_dir / "_reusable-test-build.yml").exists()

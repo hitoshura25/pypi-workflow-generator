@@ -3,10 +3,17 @@ Tests for MCP server functionality.
 """
 
 import os
+from pathlib import Path
 
 import pytest
 
-from hitoshura25_pypi_workflow_generator.server import MCPServer
+from hitoshura25_pypi_workflow_generator.server import MCPServer, main
+
+# Expected number of tools in MCP server
+EXPECTED_TOOL_COUNT = 3
+# MCP JSON-RPC error code for method not found
+MCP_METHOD_NOT_FOUND = -32601
+
 
 
 @pytest.mark.asyncio
@@ -16,7 +23,7 @@ async def test_list_tools():
     result = await server.handle_list_tools()
 
     assert "tools" in result
-    assert len(result["tools"]) == 3
+    assert len(result["tools"]) == EXPECTED_TOOL_COUNT
 
     tool_names = [tool["name"] for tool in result["tools"]]
     assert "generate_workflows" in tool_names
@@ -71,7 +78,7 @@ async def test_call_tool_generate_workflows(tmp_path):
     server = MCPServer()
 
     # Change to temp directory
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     os.chdir(tmp_path)
 
     try:
@@ -122,7 +129,7 @@ async def test_call_tool_generate_workflows_with_options(tmp_path):
     """Test calling generate_workflows with custom options."""
     server = MCPServer()
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     os.chdir(tmp_path)
 
     try:
@@ -168,7 +175,7 @@ async def test_call_tool_initialize_project(tmp_path):
     """Test calling initialize_project tool via MCP."""
     server = MCPServer()
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     os.chdir(tmp_path)
 
     try:
@@ -260,7 +267,7 @@ async def test_handle_request_list_tools():
     response = await server.handle_request(request)
 
     assert "tools" in response
-    assert len(response["tools"]) == 3
+    assert len(response["tools"]) == EXPECTED_TOOL_COUNT
 
 
 @pytest.mark.asyncio
@@ -293,13 +300,12 @@ async def test_handle_request_unknown_method():
     response = await server.handle_request(request)
 
     assert "error" in response
-    assert response["error"]["code"] == -32601
+    assert response["error"]["code"] == MCP_METHOD_NOT_FOUND
     assert "Method not found" in response["error"]["message"]
 
 
 def test_mcp_server_imports():
     """Test that MCP server can be imported successfully."""
-    from hitoshura25_pypi_workflow_generator.server import MCPServer, main
 
     assert MCPServer is not None
     assert main is not None
@@ -311,7 +317,7 @@ async def test_generate_workflows_creates_all_files_via_mcp(tmp_path):
     """Test that generate_workflows MCP tool creates all 3 workflow files."""
     server = MCPServer()
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     os.chdir(tmp_path)
 
     try:

@@ -1,14 +1,18 @@
 """Tests for the calculate_version.sh script."""
 
+import os
+from pathlib import Path
+
+from hitoshura25_pypi_workflow_generator.generator import generate_workflows
+
+# Expected number of generated files: 3 workflows + 1 script
+EXPECTED_FILE_COUNT = 4
+
 
 def test_script_exists_after_generation(tmp_path):
     """Test that the script is generated and executable."""
     # Change to temp directory
-    import os
-
-    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
-
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     try:
         os.chdir(tmp_path)
 
@@ -30,11 +34,7 @@ def test_script_exists_after_generation(tmp_path):
 
 def test_script_contains_correct_shebang(tmp_path):
     """Test that generated script has proper shebang."""
-    import os
-
-    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
-
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     try:
         os.chdir(tmp_path)
 
@@ -62,11 +62,9 @@ def test_script_contains_correct_shebang(tmp_path):
 
 def test_script_directory_created(tmp_path):
     """Test that scripts directory is created."""
-    import os
 
-    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     try:
         os.chdir(tmp_path)
 
@@ -88,11 +86,9 @@ def test_script_directory_created(tmp_path):
 
 def test_generated_files_list_includes_script(tmp_path):
     """Test that the generated files list includes the script."""
-    import os
 
-    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     try:
         os.chdir(tmp_path)
 
@@ -103,7 +99,7 @@ def test_generated_files_list_includes_script(tmp_path):
         result = generate_workflows(python_version="3.11", test_path="tests/")
 
         assert result["success"]
-        assert len(result["files_created"]) == 4, (
+        assert len(result["files_created"]) == EXPECTED_FILE_COUNT, (
             "Should create 3 workflow files + 1 script"
         )
 
@@ -119,11 +115,9 @@ def test_generated_files_list_includes_script(tmp_path):
 
 def test_script_uses_dev_format(tmp_path):
     """Test that the script generates .dev versions instead of rc."""
-    import os
 
-    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     try:
         os.chdir(tmp_path)
 
@@ -156,11 +150,9 @@ def test_script_uses_dev_format(tmp_path):
 
 def test_script_help_shows_dev_format(tmp_path):
     """Test that script help documentation shows development version format."""
-    import os
 
-    from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
-    original_cwd = os.getcwd()
+    original_cwd = Path.cwd()
     try:
         os.chdir(tmp_path)
 

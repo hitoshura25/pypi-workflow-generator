@@ -3,6 +3,9 @@ from pathlib import Path
 
 from hitoshura25_pypi_workflow_generator.generator import generate_workflows
 
+# Expected number of generated files: 3 workflows + 1 script
+EXPECTED_FILE_COUNT = 4
+
 
 def test_generate_workflows_default_arguments(tmp_path):
     """Test workflow generation with default arguments."""
@@ -25,7 +28,9 @@ def test_generate_workflows_default_arguments(tmp_path):
         assert result["success"]
         assert "files_created" in result
         assert "message" in result
-        assert len(result["files_created"]) == 4  # 3 workflows + 1 script
+        assert (
+            len(result["files_created"]) == EXPECTED_FILE_COUNT
+        )  # 3 workflows + 1 script
 
         # Verify all 3 workflow files exist
         reusable_file = output_dir / "_reusable-test-build.yml"
@@ -78,7 +83,9 @@ def test_generate_workflows_custom_arguments(tmp_path):
         assert result["success"]
         assert "files_created" in result
         assert "message" in result
-        assert len(result["files_created"]) == 4  # 3 workflows + 1 script
+        assert (
+            len(result["files_created"]) == EXPECTED_FILE_COUNT
+        )  # 3 workflows + 1 script
 
         # Verify all 3 workflow files exist
         reusable_file = output_dir / "_reusable-test-build.yml"

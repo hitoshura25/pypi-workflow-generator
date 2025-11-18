@@ -15,7 +15,6 @@ EXPECTED_TOOL_COUNT = 3
 MCP_METHOD_NOT_FOUND = -32601
 
 
-
 @pytest.mark.asyncio
 async def test_list_tools():
     """Test that list_tools returns correct tool definitions."""

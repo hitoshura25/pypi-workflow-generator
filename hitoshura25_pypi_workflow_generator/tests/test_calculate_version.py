@@ -63,7 +63,6 @@ def test_script_contains_correct_shebang(tmp_path):
 def test_script_directory_created(tmp_path):
     """Test that scripts directory is created."""
 
-
     original_cwd = Path.cwd()
     try:
         os.chdir(tmp_path)
@@ -86,7 +85,6 @@ def test_script_directory_created(tmp_path):
 
 def test_generated_files_list_includes_script(tmp_path):
     """Test that the generated files list includes the script."""
-
 
     original_cwd = Path.cwd()
     try:
@@ -115,7 +113,6 @@ def test_generated_files_list_includes_script(tmp_path):
 
 def test_script_uses_dev_format(tmp_path):
     """Test that the script generates .dev versions instead of rc."""
-
 
     original_cwd = Path.cwd()
     try:
@@ -150,7 +147,6 @@ def test_script_uses_dev_format(tmp_path):
 
 def test_script_help_shows_dev_format(tmp_path):
     """Test that script help documentation shows development version format."""
-
 
     original_cwd = Path.cwd()
     try:

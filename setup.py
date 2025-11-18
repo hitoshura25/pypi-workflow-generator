@@ -1,35 +1,39 @@
-
-from setuptools import setup, find_packages
 import os
+from pathlib import Path
 
-def local_scheme(version):
+from setuptools import find_packages, setup
+
+
+def local_scheme(_version):
     if os.environ.get("IS_PULL_REQUEST"):
         return f".dev{os.environ['GITHUB_RUN_ID']}"
-    else:
-        return ""
+    return ""
+
 
 try:
-    with open("README.md", "r", encoding="utf-8") as fh:
-        long_description = fh.read()
+    long_description = Path("README.md").read_text(encoding="utf-8")
 except FileNotFoundError:
     long_description = ""
 
 setup(
-    name='hitoshura25-pypi-workflow-generator',
-    author='Vinayak Menon',
-    author_email='vinayakmenon+pypi@users.noreply.github.com',
-    description='Dual-mode tool (MCP server + CLI) for generating GitHub Actions workflows for Python package publishing',
-    url='https://github.com/hitoshura25/pypi-workflow-generator',
+    name="hitoshura25-pypi-workflow-generator",
+    author="Vinayak Menon",
+    author_email="vinayakmenon+pypi@users.noreply.github.com",
+    description=(
+        "Dual-mode tool (MCP server + CLI) for generating GitHub Actions "
+        "workflows for Python package publishing"
+    ),
+    url="https://github.com/hitoshura25/pypi-workflow-generator",
     use_scm_version={"local_scheme": local_scheme},
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'Jinja2>=3.0',
-        'pyyaml',
+        "Jinja2>=3.0",
+        "pyyaml",
     ],
-    python_requires='>=3.8',
+    python_requires=">=3.8",
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
@@ -45,15 +49,14 @@ setup(
         "Topic :: Software Development :: Build Tools",
     ],
     entry_points={
-        'console_scripts': [
+        "console_scripts": [
             # CLI mode (existing)
-            'hitoshura25-pypi-workflow-generator=hitoshura25_pypi_workflow_generator.main:main',
-            'hitoshura25-pypi-workflow-generator-init=hitoshura25_pypi_workflow_generator.init:main',
-            'hitoshura25-pypi-release=hitoshura25_pypi_workflow_generator.create_release:main',
-            'hitoshura25-pypi-workflow-generator-release=hitoshura25_pypi_workflow_generator.release_workflow:main',
-
+            "hitoshura25-pypi-workflow-generator=hitoshura25_pypi_workflow_generator.main:main",
+            "hitoshura25-pypi-workflow-generator-init=hitoshura25_pypi_workflow_generator.init:main",
+            "hitoshura25-pypi-release=hitoshura25_pypi_workflow_generator.create_release:main",
+            "hitoshura25-pypi-workflow-generator-release=hitoshura25_pypi_workflow_generator.release_workflow:main",
             # MCP mode (new)
-            'mcp-hitoshura25-pypi-workflow-generator=hitoshura25_pypi_workflow_generator.server:main',
+            "mcp-hitoshura25-pypi-workflow-generator=hitoshura25_pypi_workflow_generator.server:main",
         ],
     },
 )

@@ -1,6 +1,7 @@
 """Git utility functions."""
-import subprocess
+
 import re
+import subprocess
 from typing import Optional
 
 
@@ -19,35 +20,35 @@ def get_git_username() -> Optional[str]:
     try:
         # Try github.user first (most specific)
         result = subprocess.run(
-            ['git', 'config', '--get', 'github.user'],
+            ["git", "config", "--get", "github.user"],
             capture_output=True,
             text=True,
-            check=False
+            check=False,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
 
         # Try extracting from GitHub remote URL
         result = subprocess.run(
-            ['git', 'remote', 'get-url', 'origin'],
+            ["git", "remote", "get-url", "origin"],
             capture_output=True,
             text=True,
-            check=False
+            check=False,
         )
         if result.returncode == 0 and result.stdout.strip():
             url = result.stdout.strip()
             # Parse https://github.com/username/repo.git
             # or git@github.com:username/repo.git
-            match = re.search(r'github\.com[/:]([^/]+)/', url)
+            match = re.search(r"github\.com[/:]([^/]+)/", url)
             if match:
                 return match.group(1)
 
         # Fallback to user.name
         result = subprocess.run(
-            ['git', 'config', '--get', 'user.name'],
+            ["git", "config", "--get", "user.name"],
             capture_output=True,
             text=True,
-            check=False
+            check=False,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip()
@@ -81,17 +82,15 @@ def sanitize_prefix(username: str) -> str:
     prefix = username.lower()
 
     # Remove email domain if present
-    if '@' in prefix:
-        prefix = prefix.split('@')[0]
+    if "@" in prefix:
+        prefix = prefix.split("@")[0]
 
     # Replace invalid characters with hyphens
-    prefix = re.sub(r'[^a-z0-9-]+', '-', prefix)
+    prefix = re.sub(r"[^a-z0-9-]+", "-", prefix)
 
     # Remove leading/trailing hyphens and consecutive hyphens
-    prefix = re.sub(r'-+', '-', prefix)  # Collapse multiple hyphens
-    prefix = prefix.strip('-')
-
-    return prefix
+    prefix = re.sub(r"-+", "-", prefix)  # Collapse multiple hyphens
+    return prefix.strip("-")
 
 
 def get_default_prefix() -> str:
@@ -109,19 +108,21 @@ def get_default_prefix() -> str:
     username = get_git_username()
 
     if not username:
-        raise RuntimeError(
+        msg = (
             "Could not determine git username. Please either:\n"
             "  1. Configure git: git config --global github.user YOUR_USERNAME\n"
             "  2. Or provide --prefix manually: --prefix YOUR_PREFIX\n"
             "  3. Or skip prefix: --no-prefix"
         )
+        raise RuntimeError(msg)
 
     prefix = sanitize_prefix(username)
 
     if not prefix:
-        raise RuntimeError(
+        msg = (
             f"Git username '{username}' could not be converted to valid prefix.\n"
             f"Please provide --prefix manually."
         )
+        raise RuntimeError(msg)
 
     return prefix
